@@ -1,0 +1,91 @@
+﻿<noscript>
+    <strong>很抱歉，如果没有启用JavaScript，web将无法正常工作。请启用后继续。</strong>
+    <strong>We're sorry but web doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+</noscript>
+<section id="upload_box" class="dialog-box">
+    <section class="dialog-main">
+        <section class="dialog-header">
+            文件上传
+        </section>
+        <section class="dialog-body">
+            <table class="pure-table">
+                <thead>
+                    <tr>
+                        <th>文件名称</th>
+                        <th>文件大小</th>
+                        <th>文件类型</th>
+                    </tr>
+                </thead>
+                <tbody id="files"></tbody>
+            </table>
+        </section>
+        <section class="dialog-footer">
+            <button class="pure-button" onclick="cancel()">取消</button>
+            <button class="button-success pure-button" onclick="sendFiles()">上传</button>
+        </section>
+    </section>
+</section>
+<script>
+    let uploadServer = './'
+    let mainBody = document.querySelector('body')
+    let files = []
+
+    mainBody.addEventListener('dragover', dragoverHandle)
+    mainBody.addEventListener('dragleave', dragleaveHandle)
+    mainBody.addEventListener('drop', dropHandle)
+
+    function dragoverHandle(event) {
+        event.preventDefault()
+    }
+
+    function dragleaveHandle(event) {
+        event.preventDefault()
+    }
+
+    function dropHandle(event) {
+        event.preventDefault()
+        files = Array.from(event.dataTransfer.files)
+
+        let dataStr = '',
+            status = true
+        for (let file of files) {
+            if (status) {
+                dataStr += `<tr class="pure-table-odd"><td>${file.name}</td><td>${file.size}</td><td>${file.type}</td></tr>`
+            } else {
+                dataStr += `<tr><td>${file.name}</td><td>${file.size}</td><td>${file.type}</td></tr>`
+            }
+            status = !status
+        }
+
+        document.querySelector('#files').innerHTML = dataStr
+        document.querySelector('#upload_box').style.display = 'flex'
+        console.log(files)
+    }
+
+    function sendFiles() {
+        let fd = new FormData()
+
+        for (let i = 0; i < files.length; i++) {
+            let fileName = `f${i}`
+            fd.append(fileName, files[i])
+        }
+
+        let xhr = new XMLHttpRequest()
+        xhr.open('POST', uploadServer, true)
+
+        xhr.onreadystatechange = function () {
+            console.log('state change', xhr.readyState)
+            if (xhr.readyState == 4) {
+                let obj = JSON.parse(xhr.responseText)
+                console.log(obj);
+            }
+        }
+
+        xhr.send(fd)
+    }
+
+    function cancel() {
+        files = []
+        document.querySelector('#upload_box').style.display = 'none'
+    }
+</script>

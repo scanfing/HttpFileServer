@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2016
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpFileServer", "HttpFileServer\HttpFileServer.csproj", "{0091385E-92B6-46EE-8EA1-E61BEFA92629}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0091385E-92B6-46EE-8EA1-E61BEFA92629}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0091385E-92B6-46EE-8EA1-E61BEFA92629}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0091385E-92B6-46EE-8EA1-E61BEFA92629}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0091385E-92B6-46EE-8EA1-E61BEFA92629}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {36411EA3-D947-40C1-A2B5-F5E12BA801B5}
+	EndGlobalSection
+EndGlobal
