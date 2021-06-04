@@ -1,8 +1,8 @@
 # HttpFileServer
 
-Http文件服务器 可用于局域网内目录浏览和文件下载、上传
+http文件服务器 可用于局域网内目录浏览和文件下载、上传
 
-HTTP server for browse directory and download / upload files
+http server for browse directory and download / upload files
 
 ## PS
 
