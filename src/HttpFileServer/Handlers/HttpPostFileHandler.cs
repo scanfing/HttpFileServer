@@ -46,7 +46,7 @@ namespace HttpFileServer.Handlers
                     postFile.SaveAs(dstFile);
             }
             response.RedirectLocation = request.Url.AbsoluteUri;
-            response.StatusCode = (int)HttpStatusCode.Redirect;
+            response.StatusCode = (int)HttpStatusCode.OK;
         }
 
         #endregion Methods
