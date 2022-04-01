@@ -55,7 +55,8 @@ namespace HttpFileServer.Utils
         /// <param name="name">名称</param>
         /// <param name="port">端口</param>
         /// <param name="protocol">协议(TCP、UDP)</param>
-        public static void NetFwAddPorts(string name, int port, string protocol)
+        /// <returns>是否进行了添加</returns>
+        public static bool NetFwAddPort(string name, int port, string protocol)
         {
             try
             {
@@ -88,9 +89,17 @@ namespace HttpFileServer.Utils
                         break;
                     }
                 }
-                if (!exist) netFwMgr.LocalPolicy.CurrentProfile.GloballyOpenPorts.Add(objPort);
+                if (!exist)
+                {
+                    netFwMgr.LocalPolicy.CurrentProfile.GloballyOpenPorts.Add(objPort);
+                    return true;
+                }
+                return false;
             }
-            catch { }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -98,7 +107,7 @@ namespace HttpFileServer.Utils
         /// </summary>
         /// <param name="port">端口</param>
         /// <param name="protocol">协议（TCP、UDP）</param>
-        public static void NetFwDelApps(int port, string protocol)
+        public static void NetFwDelPort(int port, string protocol)
         {
             try
             {

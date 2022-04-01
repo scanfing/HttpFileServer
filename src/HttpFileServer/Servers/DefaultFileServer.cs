@@ -27,6 +27,11 @@ namespace HttpFileServer.Servers
 
         private CancellationTokenSource _cts;
 
+        /// <summary>
+        /// 是否增加了防火墙放行端口，如果进行了增加，则停止服务时将其删除
+        /// </summary>
+        private bool _isFirewallOpened = false;
+
         private HttpListener _listener;
 
         private LocalFileService _localFileSrv;
@@ -81,7 +86,7 @@ namespace HttpFileServer.Servers
             _cts = new CancellationTokenSource();
             _listener.Start();
             _localFileSrv.Start();
-
+            _isFirewallOpened = FirewallHelper.NetFwAddPort("FileServer", Port, "TCP");
             _postHandler = new HttpPostHandler(SourceDir);
 
             _ = Task.Factory.StartNew(RunServerLoop);
@@ -94,6 +99,8 @@ namespace HttpFileServer.Servers
             _cts.Cancel();
             _listener.Stop();
             _cacheSrv.Clear();
+            if (_isFirewallOpened)
+                FirewallHelper.NetFwDelPort(Port, "TCP");
             RecordLog($"Web Server[{Port} @ {SourceDir} ] Stopped.");
         }
 
