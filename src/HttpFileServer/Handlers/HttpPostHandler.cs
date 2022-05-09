@@ -9,20 +9,18 @@ using HttpFileServer.Web;
 
 namespace HttpFileServer.Handlers
 {
-    public class HttpPostHandler
+    public class HttpPostHandler : HttpHandlerBase
     {
         #region Fields
 
         private HttpPostFileHandler _postFileHandler;
-        private string _rootDir;
 
         #endregion Fields
 
         #region Constructors
 
-        public HttpPostHandler(string rootDir)
+        public HttpPostHandler(string rootDir) : base(rootDir)
         {
-            _rootDir = rootDir;
             _postFileHandler = new HttpPostFileHandler(rootDir);
         }
 
@@ -30,7 +28,7 @@ namespace HttpFileServer.Handlers
 
         #region Methods
 
-        public async Task ProcessRequest(HttpListenerContext context)
+        public override async Task ProcessRequest(HttpListenerContext context)
         {
             var request = context.Request;
             var response = context.Response;

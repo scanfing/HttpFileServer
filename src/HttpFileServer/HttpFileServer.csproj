@@ -107,12 +107,19 @@
     <Compile Include="Core\Config.cs" />
     <Compile Include="Core\IFileServer.cs" />
     <Compile Include="Core\ServerStatus.cs" />
+    <Compile Include="Handlers\HttpGetHandler.cs" />
+    <Compile Include="Handlers\HttpHandlerBase.cs" />
+    <Compile Include="Handlers\HttpHeadHandler.cs" />
     <Compile Include="Handlers\HttpPostFileHandler.cs" />
+    <Compile Include="Handlers\IHttpHandler.cs" />
     <Compile Include="Resources\HtmlResource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>HtmlResource.resx</DependentUpon>
     </Compile>
+    <Compile Include="Servers\HttpFileServerBase.cs" />
+    <Compile Include="Servers\JsonApiServer.cs" />
+    <Compile Include="Services\JsonService.cs" />
     <Compile Include="Web\HttpListenerRequestExtensions.cs" />
     <Compile Include="Handlers\HttpPostHandler.cs" />
     <Compile Include="Infrastructure\CommandImpl{T}.cs" />

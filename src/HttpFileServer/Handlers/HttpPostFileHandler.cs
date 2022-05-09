@@ -9,26 +9,19 @@ using HttpFileServer.Web;
 
 namespace HttpFileServer.Handlers
 {
-    public class HttpPostFileHandler
+    public class HttpPostFileHandler : HttpHandlerBase
     {
-        #region Fields
-
-        private string _rootDir;
-
-        #endregion Fields
-
         #region Constructors
 
-        public HttpPostFileHandler(string rootDir)
+        public HttpPostFileHandler(string rootDir) : base(rootDir)
         {
-            _rootDir = rootDir;
         }
 
         #endregion Constructors
 
         #region Methods
 
-        public async Task ProcessRequest(HttpListenerContext context)
+        public override async Task ProcessRequest(HttpListenerContext context)
         {
             var request = context.Request;
             var response = context.Response;
@@ -41,8 +34,8 @@ namespace HttpFileServer.Handlers
             foreach (var content in contents)
             {
                 var postFile = content.GetAsPostedFile();
-                var dstFile = Path.Combine(_rootDir, request.Url.LocalPath.TrimStart('/'), postFile.FileName);
-                if (dstFile != _rootDir)
+                var dstFile = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'), postFile.FileName);
+                if (dstFile != SourceDir)
                     postFile.SaveAs(dstFile);
             }
             response.RedirectLocation = request.Url.AbsoluteUri;
