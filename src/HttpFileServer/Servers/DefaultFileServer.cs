@@ -51,6 +51,18 @@ namespace HttpFileServer.Servers
                 RegisterHandler("POST", new HttpPostHandler(_rootDir));
         }
 
+        protected override void OnLocalFileSrv_DirContentChanged(object sender, string path)
+        {
+            _cacheSrv.Delete(path);
+            base.OnLocalFileSrv_DirContentChanged(sender, path);
+        }
+
+        protected override void OnLocalFileSrv_PathDeleted(object sender, string path)
+        {
+            _cacheSrv.Delete(path);
+            base.OnLocalFileSrv_PathDeleted(sender, path);
+        }
+
         #endregion Methods
     }
 }

@@ -27,6 +27,7 @@ namespace HttpFileServer.Views
         {
             InitializeComponent();
             Loaded += ShellView_Loaded;
+            Unloaded += ShellView_Unloaded;
         }
 
         #endregion Constructors
@@ -39,6 +40,15 @@ namespace HttpFileServer.Views
             {
                 svm.Dispatcher = Dispatcher;
                 svm.LoadedCommand?.Execute(sender);
+            }
+        }
+
+        private void ShellView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ShellViewModel svm)
+            {
+                svm.Dispatcher = Dispatcher;
+                svm.UnLoadedCommand?.Execute(sender);
             }
         }
 

@@ -103,11 +103,11 @@ namespace HttpFileServer.Servers
             return null;
         }
 
-        protected virtual void OnLocalFileSrv_DirContentChanged(object sender, string e)
+        protected virtual void OnLocalFileSrv_DirContentChanged(object sender, string path)
         {
         }
 
-        protected virtual void OnLocalFileSrv_PathDeleted(object sender, string e)
+        protected virtual void OnLocalFileSrv_PathDeleted(object sender, string path)
         {
         }
 
