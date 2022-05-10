@@ -17,13 +17,5 @@ namespace HttpFileServer.Servers
         }
 
         #endregion Constructors
-
-        #region Methods
-
-        protected override void InitHandler()
-        {
-        }
-
-        #endregion Methods
     }
 }

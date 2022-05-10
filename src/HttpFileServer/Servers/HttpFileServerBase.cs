@@ -4,6 +4,7 @@ using HttpFileServer.Models;
 using HttpFileServer.Services;
 using HttpFileServer.Utils;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -21,6 +22,8 @@ namespace HttpFileServer.Servers
         private HttpListener _listener;
         private LocalFileService _localFileSrv;
 
+        private ConcurrentDictionary<string, IHttpHandler> RegisteredHandlers;
+
         #endregion Fields
 
         #region Constructors
@@ -36,6 +39,8 @@ namespace HttpFileServer.Servers
             _localFileSrv = new LocalFileService(path);
             _localFileSrv.DirContentChanged += OnLocalFileSrv_DirContentChanged;
             _localFileSrv.PathDeleted += OnLocalFileSrv_PathDeleted;
+
+            RegisteredHandlers = new ConcurrentDictionary<string, IHttpHandler>();
         }
 
         #endregion Constructors
@@ -54,10 +59,6 @@ namespace HttpFileServer.Servers
 
         public bool EnableUpload { get; protected set; }
 
-        public HttpGetHandler GetHandler { get; protected set; }
-
-        public HttpHeadHandler HeadHandler { get; protected set; }
-
         /// <summary>
         /// 是否增加了防火墙放行端口，如果进行了增加，则停止服务时将其删除
         /// </summary>
@@ -65,7 +66,6 @@ namespace HttpFileServer.Servers
 
         public int Port { get; }
 
-        public HttpPostHandler PostHandler { get; protected set; }
         public long SingleCacheMaxSize { get; protected set; } = 81920;
 
         public string SourceDir { get; }
@@ -80,7 +80,6 @@ namespace HttpFileServer.Servers
             _listener.Start();
             _localFileSrv.Start();
             IsFirewallOpened = FirewallHelper.NetFwAddPort("FileServer", Port, "TCP");
-            PostHandler = new HttpPostHandler(SourceDir);
 
             _ = Task.Factory.StartNew(RunServerLoop);
             RecordLog($"Web Server[{Port} @ {SourceDir} ] Started.");
@@ -97,7 +96,12 @@ namespace HttpFileServer.Servers
             RecordLog($"Web Server[{Port} @ {SourceDir} ] Stopped.");
         }
 
-        protected abstract void InitHandler();
+        protected virtual IHttpHandler GetHandlerByMethodName(string method)
+        {
+            if (RegisteredHandlers.TryGetValue(method, out var handler))
+                return handler;
+            return null;
+        }
 
         protected virtual void OnLocalFileSrv_DirContentChanged(object sender, string e)
         {
@@ -105,21 +109,6 @@ namespace HttpFileServer.Servers
 
         protected virtual void OnLocalFileSrv_PathDeleted(object sender, string e)
         {
-        }
-
-        protected virtual async Task ProcessGet(HttpListenerContext context)
-        {
-            GetHandler?.ProcessRequest(context);
-        }
-
-        protected virtual async Task ProcessHead(HttpListenerContext context)
-        {
-            GetHandler?.ProcessRequest(context);
-        }
-
-        protected virtual async Task ProcessPost(HttpListenerContext context)
-        {
-            PostHandler?.ProcessRequest(context);
         }
 
         protected virtual void RaiseRequestIn(RequestModel requestModel)
@@ -139,6 +128,11 @@ namespace HttpFileServer.Servers
             LogGenerated?.BeginInvoke(this, content, null, null);
         }
 
+        protected void RegisterHandler(string methodName, IHttpHandler handler)
+        {
+            RegisteredHandlers[methodName] = handler;
+        }
+
         private async void DoContext(HttpListenerContext context)
         {
             var request = context.Request;
@@ -155,22 +149,11 @@ namespace HttpFileServer.Servers
 
             try
             {
-                switch (method)
-                {
-                    case "GET":
-                        await ProcessGet(context);
-                        break;
-
-                    case "HEAD":
-                        await ProcessHead(context);
-                        break;
-
-                    case "POST":
-                        await ProcessPost(context);
-                        break;
-
-                    default: response.StatusCode = (int)HttpStatusCode.Forbidden; break;
-                }
+                var handler = GetHandlerByMethodName(method);
+                if (handler is null)
+                    response.StatusCode = (int)HttpStatusCode.Forbidden;
+                else
+                    await handler.ProcessRequest(context);
             }
             catch (Exception ex)
             {

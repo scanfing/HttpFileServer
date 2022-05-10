@@ -35,18 +35,20 @@ namespace HttpFileServer.Servers
 
             _rootDir = path;
             _cacheSrv = CacheService.GetDefault();
+
+            InitHandler();
         }
 
         #endregion Constructors
 
         #region Methods
 
-        protected override void InitHandler()
+        protected void InitHandler()
         {
-            GetHandler = new HttpGetHandler(_rootDir, _cacheSrv);
-            HeadHandler = new HttpHeadHandler(_rootDir, _cacheSrv);
+            RegisterHandler("GET", new HttpGetHandler(_rootDir, _cacheSrv));
+            RegisterHandler("HEAD", new HttpHeadHandler(_rootDir, _cacheSrv));
             if (EnableUpload)
-                PostHandler = new HttpPostHandler(_rootDir);
+                RegisterHandler("POST", new HttpPostHandler(_rootDir));
         }
 
         #endregion Methods
