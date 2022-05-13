@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,9 +10,29 @@ using System.Threading.Tasks;
 namespace HttpFileServer.Services
 {
     public class JsonService
-    {        /// <summary>
+    {
+        #region Constructors
+
+        public JsonService()
+        {
+            JsonSerializerSettings setting = new JsonSerializerSettings();
+            JsonConvert.DefaultSettings = new Func<JsonSerializerSettings>(() =>
+            {
+                //日期类型默认格式化处理
+                setting.DateFormatHandling = DateFormatHandling.MicrosoftDateFormat;
+                setting.DateFormatString = "yyyy-MM-dd HH:mm:ss";
+                //空值处理
+                setting.NullValueHandling = NullValueHandling.Ignore;
+
+                return setting;
+            });
+        }
+
+        #endregion Constructors
+
         #region Methods
 
+        /// <summary>
         /// 反序列化
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -19,19 +40,7 @@ namespace HttpFileServer.Services
         /// <returns></returns>
         public T DeserializeObject<T>(string value)
         {
-            var serializer = new DataContractJsonSerializer(typeof(T));
-            try
-            {
-                var buff = Encoding.UTF8.GetBytes(value);
-                var memStream = new MemoryStream(buff);
-
-                object obj = serializer.ReadObject(memStream);
-                return (T)obj;
-            }
-            catch (Exception)
-            {
-                return default;
-            }
+            return JsonConvert.DeserializeObject<T>(value);
         }
 
         /// <summary>
@@ -41,12 +50,7 @@ namespace HttpFileServer.Services
         /// <returns></returns>
         public string SerializeObject<T>(T value)
         {
-            DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(T));
-            var stream = new MemoryStream();
-            jsonSerializer.WriteObject(stream, value);
-            var buff = stream.GetBuffer();
-            var content = Encoding.UTF8.GetString(buff, 0, buff.Length);
-            return content;
+            return JsonConvert.SerializeObject(value);
         }
 
         #endregion Methods

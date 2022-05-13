@@ -27,6 +27,8 @@ namespace HttpFileServer.ViewModels
         private string _sourceDir;
         private ServerStatus _status = ServerStatus.Ready;
 
+        private bool _useJsonResponse = false;
+
         #endregion Fields
 
         #region Constructors
@@ -89,6 +91,12 @@ namespace HttpFileServer.ViewModels
         {
             get => _status;
             set => SetProperty(ref _status, value);
+        }
+
+        public bool UseJsonResponse
+        {
+            get => _useJsonResponse;
+            set => SetProperty(ref _useJsonResponse, value);
         }
 
         #endregion Properties
@@ -175,7 +183,15 @@ namespace HttpFileServer.ViewModels
                 return;
 
             Directory.CreateDirectory(SourceDir);
-            FileServer = new DefaultFileServer(ListenPort, SourceDir, EnableUpload);
+            if (_useJsonResponse)
+            {
+                FileServer = new JsonApiServer(ListenPort, SourceDir, EnableUpload);
+            }
+            else
+            {
+                FileServer = new DefaultFileServer(ListenPort, SourceDir, EnableUpload);
+            }
+
             FileServer.LogGenerated += FileServer_LogGenerated;
             FileServer.NewReqeustIn += FileServer_NewReqeustIn;
             FileServer.RequestOut += FileServer_RequestOut;

@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using HttpFileServer.Infrastructure;
+using HttpFileServer.Services;
 using HttpFileServer.ViewModels;
 
 namespace HttpFileServer.Views

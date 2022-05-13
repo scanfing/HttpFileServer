@@ -163,7 +163,7 @@ namespace HttpFileServer.Servers
             finally
             {
                 response.AddHeader("Access-Control-Allow-Origin", "*");
-                response.AddHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+                response.AddHeader("Access-Control-Allow-Methods", string.Join(",", RegisteredHandlers.Keys));
                 try { response.Close(); }
                 catch { }
                 RecordLog($"{remotePoint} {method} {url} {range} {response.StatusCode}");
