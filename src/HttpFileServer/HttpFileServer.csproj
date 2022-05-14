@@ -137,7 +137,6 @@
       <DependentUpon>HtmlResource.resx</DependentUpon>
     </Compile>
     <Compile Include="Servers\HttpFileServerBase.cs" />
-    <Compile Include="Servers\JsonApiServer.cs" />
     <Compile Include="Services\JsonService.cs" />
     <Compile Include="Utils\PathInfoExtension.cs" />
     <Compile Include="Web\HttpListenerRequestExtensions.cs" />
