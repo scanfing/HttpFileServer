@@ -53,6 +53,12 @@ namespace HttpFileServer.ViewModels
         public CommandImpl CommandStopServer { get; private set; }
         public Dispatcher Dispatcher { get; set; }
 
+        public bool EanbleJsonResponse
+        {
+            get => _useJsonResponse;
+            set => SetProperty(ref _useJsonResponse, value);
+        }
+
         public bool EnableUpload
         {
             get => _enableUpload;
@@ -93,12 +99,6 @@ namespace HttpFileServer.ViewModels
             set => SetProperty(ref _status, value);
         }
 
-        public bool UseJsonResponse
-        {
-            get => _useJsonResponse;
-            set => SetProperty(ref _useJsonResponse, value);
-        }
-
         #endregion Properties
 
         #region Methods
@@ -124,6 +124,7 @@ namespace HttpFileServer.ViewModels
             SourceDir = cfg.RootDir;
             ListenPort = cfg.Port;
             EnableUpload = cfg.EnableUpload;
+            EanbleJsonResponse = cfg.EnableJson;
 
             Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
         }
@@ -183,14 +184,8 @@ namespace HttpFileServer.ViewModels
                 return;
 
             Directory.CreateDirectory(SourceDir);
-            if (_useJsonResponse)
-            {
-                FileServer = new JsonApiServer(ListenPort, SourceDir, EnableUpload);
-            }
-            else
-            {
-                FileServer = new DefaultFileServer(ListenPort, SourceDir, EnableUpload);
-            }
+
+            FileServer = new DefaultFileServer(ListenPort, SourceDir, EanbleJsonResponse, EnableUpload);
 
             FileServer.LogGenerated += FileServer_LogGenerated;
             FileServer.NewReqeustIn += FileServer_NewReqeustIn;

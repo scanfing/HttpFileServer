@@ -10,8 +10,8 @@ namespace HttpFileServer.Core
     {
         #region Properties
 
+        public bool EnableJson { get; set; } = true;
         public bool EnableUpload { get; set; } = false;
-
         public ushort Port { get; set; } = 80;
 
         public List<string> RecentDirs { get; set; }

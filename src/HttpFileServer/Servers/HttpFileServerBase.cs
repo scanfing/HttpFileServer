@@ -32,6 +32,7 @@ namespace HttpFileServer.Servers
         {
             Port = port;
             SourceDir = path.TrimEnd('\\').TrimEnd('/');
+            EnableUpload = enableUpload;
 
             _listener = new HttpListener();
             _listener.Prefixes.Add($"http://+:{port}/");

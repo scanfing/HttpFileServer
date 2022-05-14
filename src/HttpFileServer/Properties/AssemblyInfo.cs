@@ -9,7 +9,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Http File Server")]
-[assembly: AssemblyCopyright("Copyright ©  2021")]
+[assembly: AssemblyCopyright("https://github.com/scanfing/HttpFileServer")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

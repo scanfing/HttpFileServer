@@ -39,6 +39,14 @@ namespace HttpFileServer.Handlers
             var response = context.Response;
             var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
             var dstpath = tmp.Replace('/', '\\');
+
+            var useJson = request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
+            if (!useJson)
+            {
+                await base.ProcessRequest(context);
+                return;
+            }
+
             //IfNoMatchCheck
             var requestETag = request.Headers["If-None-Match"];
             var cacheTag = _cacheSrv.GetPathCacheId(dstpath);
@@ -51,6 +59,16 @@ namespace HttpFileServer.Handlers
             {
                 response.AppendHeader("Cache-Control", "no-cache");
                 response.AppendHeader("Etag", cacheTag);
+                //文件
+                if (File.Exists(dstpath))
+                {
+                    if (request.Headers.AllKeys.Count(p => p.ToLower() == "range") > 0)
+                        await ResponseContentPartial(dstpath, request, response);
+                    else
+                        await ResponseContentFull(dstpath, request, response);
+                }
+
+                //目录
                 response.AddHeader("Content-Type", "application/json");
 
                 var buff = _cacheSrv.GetCache(dstpath);

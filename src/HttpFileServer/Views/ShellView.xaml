@@ -76,9 +76,10 @@
                               Grid.Column="1"
                               Margin="5,0"
                               VerticalAlignment="Center"
-                              Content="Json模式"
-                              IsChecked="{Binding UseJsonResponse, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              IsEnabled="{Binding IsRunning, Converter={StaticResource boolReverse}}" />
+                              Content="Json支持"
+                              IsChecked="{Binding EanbleJsonResponse, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              IsEnabled="{Binding IsRunning, Converter={StaticResource boolReverse}}"
+                              ToolTip="开启后将accept-type为application/json的请求响应为json格式（仅限目录请求）" />
                     <CheckBox x:Name="ckAllowUpload"
                               Grid.Column="1"
                               Margin="5,0"
