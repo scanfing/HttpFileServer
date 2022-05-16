@@ -66,6 +66,7 @@ namespace HttpFileServer.Handlers
                         await ResponseContentPartial(dstpath, request, response);
                     else
                         await ResponseContentFull(dstpath, request, response);
+                    return;
                 }
 
                 //目录
@@ -91,6 +92,7 @@ namespace HttpFileServer.Handlers
                     _cacheSrv.SaveCache(dstpath, buff);
                 }
 
+                response.ContentLength64 = buff.LongLength;
                 var stream = new MemoryStream(buff);
                 await stream.CopyToAsync(response.OutputStream);
             }
