@@ -4,6 +4,8 @@ http文件服务器 可用于局域网内目录浏览和文件下载、上传
 
 http server for browse directory and download / upload files
 
+支持将目录信息响应为json格式
+
 ## PS
 
 部分后端代码来自 [Prism](https://github.com/PrismLibrary/Prism) & [.Net Reference Source](https://referencesource.microsoft.com/)
