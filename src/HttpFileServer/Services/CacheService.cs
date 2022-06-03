@@ -44,13 +44,15 @@ namespace HttpFileServer.Services
 
         public void Delete(string path)
         {
-            _cacheKeyDict.TryRemove(path, out _);
-            _cacheDict.TryRemove(path, out _);
+            var key = path.TrimEnd('\\');
+            _cacheKeyDict.TryRemove(key, out _);
+            _cacheDict.TryRemove(key, out _);
         }
 
         public byte[] GetCache(string path)
         {
-            if (_cacheDict.TryGetValue(path, out var buff))
+            var key = path.TrimEnd('\\');
+            if (_cacheDict.TryGetValue(key, out var buff))
             {
                 return buff.ToArray();
             }
@@ -59,17 +61,19 @@ namespace HttpFileServer.Services
 
         public string GetPathCacheId(string path)
         {
-            if (!_cacheKeyDict.TryGetValue(path, out var key))
+            var key = path.TrimEnd('\\');
+            if (!_cacheKeyDict.TryGetValue(key, out var cid))
             {
-                key = Guid.NewGuid().ToString();
-                _cacheKeyDict[path] = key;
+                cid = Guid.NewGuid().ToString();
+                _cacheKeyDict[path] = cid;
             }
-            return key;
+            return cid;
         }
 
         public void SaveCache(string path, byte[] data)
         {
-            _cacheDict[path] = data;
+            var key = path.TrimEnd('\\');
+            _cacheDict[key] = data;
         }
 
         #endregion Methods
