@@ -49,7 +49,7 @@ namespace HttpFileServer.Servers
 
             RegisterHandler("GET", new HttpGetHandler(_rootDir, _cacheSrv));
             if (_enableJson)
-                RegisterHandler("GET", new HttpJsonGetHandler(_rootDir, _cacheSrv));
+                RegisterHandler("GET", new HttpJsonGetHandler(_rootDir, new CacheService()));
 
             if (EnableUpload)
                 RegisterHandler("POST", new HttpPostHandler(_rootDir));
