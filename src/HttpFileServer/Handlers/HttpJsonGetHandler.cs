@@ -40,6 +40,11 @@ namespace HttpFileServer.Handlers
             var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
             var dstpath = tmp.Replace('/', '\\');
 
+            if (request.AcceptTypes == null)
+            {
+                await base.ProcessRequest(context);
+                return;
+            }
             var useJson = request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
             if (!useJson)
             {
