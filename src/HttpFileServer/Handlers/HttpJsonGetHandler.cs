@@ -81,18 +81,30 @@ namespace HttpFileServer.Handlers
 
                 if (buff is null)
                 {
+                    DirInfoResponse respObj = new DirInfoResponse();
+                    var dirinfo = new DirectoryInfo(dstpath);
+                    respObj.LastWriteTime = dirinfo.LastWriteTime;
+                    respObj.Name = dirinfo.Name;
+                    respObj.RelativePath = Path.GetFullPath(dstpath).Replace(SourceDir, "/");
+
                     var dirs = Directory.GetDirectories(dstpath);
                     var files = Directory.GetFiles(dstpath);
-                    var lst = dirs.ToList();
-                    lst.AddRange(files);
-                    var dstlst = new List<PathInfo>();
-                    foreach (var p in lst)
+                    var dlst = new List<DirPathInfo>();
+                    var flst = new List<FilePathInfo>();
+                    foreach (var p in dirs)
                     {
-                        var dinfo = p.GetPathInfo(SourceDir);
-                        dstlst.Add(dinfo);
+                        var dinfo = p.GetPathInfo(SourceDir) as DirPathInfo;
+                        dlst.Add(dinfo);
                     }
+                    foreach (var f in files)
+                    {
+                        var finfo = f.GetPathInfo(SourceDir) as FilePathInfo;
+                        flst.Add(finfo);
+                    }
+                    respObj.Directories = dlst.ToArray();
+                    respObj.Files = flst.ToArray();
 
-                    var content = _jsonSrv.SerializeObject(dstlst);
+                    var content = _jsonSrv.SerializeObject(respObj);
                     buff = Encoding.UTF8.GetBytes(content);
                     _cacheSrv.SaveCache(dstpath, buff);
                 }

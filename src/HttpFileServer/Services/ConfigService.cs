@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -18,6 +17,7 @@ namespace HttpFileServer.Services
 
         private string _cfgDir;
         private string _cfgFile;
+        private JsonService _jsonSrv;
 
         #endregion Fields
 
@@ -29,6 +29,8 @@ namespace HttpFileServer.Services
             var exe = Process.GetCurrentProcess().MainModule.FileName;
             _cfgDir = Path.GetDirectoryName(exe);
             _cfgFile = Path.Combine(_cfgDir, $"{name}.json");
+
+            _jsonSrv = new JsonService();
         }
 
         #endregion Constructors
@@ -41,7 +43,7 @@ namespace HttpFileServer.Services
                 return default;
 
             var content = File.ReadAllText(_cfgFile);
-            var _config = JsonDeserialize<T>(content);
+            var _config = _jsonSrv.DeserializeObject<T>(content);
             return _config;
         }
 
@@ -49,32 +51,14 @@ namespace HttpFileServer.Services
         {
             try
             {
-                DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(T));
-                var fs = new FileStream(_cfgFile, FileMode.Create, FileAccess.Write);
-                jsonSerializer.WriteObject(fs, cfg);
-                fs.Close();
+                var jsonSerializer = new JsonService();
+                var content = _jsonSrv.SerializeObject(cfg);
+                File.WriteAllText(_cfgFile, content);
                 return true;
             }
             catch (Exception)
             {
                 return false;
-            }
-        }
-
-        private static T JsonDeserialize<T>(string data)
-        {
-            var serializer = new DataContractJsonSerializer(typeof(T));
-            try
-            {
-                var buff = Encoding.UTF8.GetBytes(data);
-                var memStream = new MemoryStream(buff);
-
-                object obj = serializer.ReadObject(memStream);
-                return (T)obj;
-            }
-            catch (Exception)
-            {
-                return default;
             }
         }
 

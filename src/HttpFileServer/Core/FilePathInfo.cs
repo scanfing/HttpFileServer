@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace HttpFileServer.Core
 {
-    [DataContract]
     public class FilePathInfo : PathInfo
     {
         #region Constructors
@@ -22,10 +21,8 @@ namespace HttpFileServer.Core
 
         #region Properties
 
-        [DataMember]
         public string FileSize { get; set; }
 
-        [DataMember]
         public long Length { get; set; }
 
         #endregion Properties

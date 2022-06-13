@@ -76,20 +76,17 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LibZ.Bootstrap, Version=1.2.0.0, Culture=neutral, PublicKeyToken=62360e53307d6ba2, processorArchitecture=MSIL">
-      <HintPath>..\packages\LibZ.Bootstrap.1.2.0.0\lib\net4-client\LibZ.Bootstrap.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -114,6 +111,7 @@
     </Compile>
     <Compile Include="Converters\BoolReverseConverter.cs" />
     <Compile Include="Core\Config.cs" />
+    <Compile Include="Core\DirInfoResponse.cs" />
     <Compile Include="Core\DirPathInfo.cs" />
     <Compile Include="Core\FilePathInfo.cs" />
     <Compile Include="Core\IFileServer.cs" />
@@ -129,6 +127,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Resources\DllResource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DllResource.resx</DependentUpon>
     </Compile>
     <Compile Include="Resources\HtmlResource.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -213,6 +216,11 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\DllResource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>DllResource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\HtmlTemplate.html" />
     <Resource Include="Resources\UploadSection.html" />
@@ -223,10 +231,12 @@
       <LastGenOutput>HtmlResource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Newtonsoft.Json.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>If $(ConfigurationName) == Debug exit
-set LIBZ=$(SolutionDir)packages\LibZ.Bootstrap.1.2.0.0\tools\libz.exe
-%25LIBZ%25 inject-dll --assembly $(TargetFileName) --include *.dll --move</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

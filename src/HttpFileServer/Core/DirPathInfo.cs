@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace HttpFileServer.Core
 {
-    [DataContract]
     public class DirPathInfo : PathInfo
     {
         #region Constructors

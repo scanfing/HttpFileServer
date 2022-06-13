@@ -7,24 +7,27 @@ using System.Threading.Tasks;
 
 namespace HttpFileServer.Core
 {
-    [DataContract]
     public class PathInfo
     {
+        #region Constructors
+
+        public PathInfo()
+        {
+            LastWriteTime = DateTime.Parse("1970-01-01");
+        }
+
+        #endregion Constructors
+
         #region Properties
 
-        [DataMember]
         public bool IsDirectory { get; protected set; }
 
-        [DataMember]
         public bool IsFile { get; protected set; }
 
-        [DataMember]
         public DateTime LastWriteTime { get; set; }
 
-        [DataMember]
         public string Name { get; set; }
 
-        [DataMember]
         public string RelativePath { get; set; }
 
         #endregion Properties
