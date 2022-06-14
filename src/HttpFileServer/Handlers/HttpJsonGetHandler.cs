@@ -15,18 +15,17 @@ namespace HttpFileServer.Handlers
     {
         #region Fields
 
-        private CacheService _cacheSrv;
+
+        private CacheService _cacheJsonSrv;
         private JsonService _jsonSrv;
 
         #endregion Fields
 
         #region Constructors
 
-        public HttpJsonGetHandler(string rootDir, CacheService cacheSrv, bool enableUpload = false) : base(rootDir, cacheSrv)
+        public HttpJsonGetHandler(string rootDir, CacheService cacheSrv, CacheService cacheJsonSrv, bool enableUpload = false) : base(rootDir, cacheSrv,enableUpload)
         {
-            _cacheSrv = cacheSrv;
-            EnableUpload = enableUpload;
-
+            _cacheJsonSrv =  cacheJsonSrv;
             _jsonSrv = new JsonService();
         }
 
@@ -55,7 +54,7 @@ namespace HttpFileServer.Handlers
             var dstpath = tmp.Replace('/', '\\');
             //IfNoMatchCheck
             var requestETag = request.Headers["If-None-Match"];
-            var cacheTag = _cacheSrv.GetPathCacheId(dstpath);
+            var cacheTag = _cacheJsonSrv.GetPathCacheId(dstpath);
 
             if (requestETag == cacheTag)
             {
@@ -78,7 +77,7 @@ namespace HttpFileServer.Handlers
                 //目录
                 response.AddHeader("Content-Type", "application/json");
 
-                var buff = _cacheSrv.GetCache(dstpath);
+                var buff = _cacheJsonSrv.GetCache(dstpath);
 
                 if (buff is null)
                 {
@@ -107,7 +106,7 @@ namespace HttpFileServer.Handlers
 
                     var content = _jsonSrv.SerializeObject(respObj);
                     buff = Encoding.UTF8.GetBytes(content);
-                    _cacheSrv.SaveCache(dstpath, buff);
+                    _cacheJsonSrv.SaveCache(dstpath, buff);
                 }
 
                 response.ContentLength64 = buff.LongLength;

@@ -23,6 +23,8 @@ namespace HttpFileServer.Servers
 
         private CacheService _cacheSrv;
 
+        private CacheService _jsonCacheSrv;
+
         private bool _enableJson;
         private string _rootDir;
 
@@ -34,6 +36,7 @@ namespace HttpFileServer.Servers
         {
             _rootDir = path;
             _cacheSrv = CacheService.GetDefault();
+            _jsonCacheSrv = new CacheService();
             _enableJson = enableJson;
 
             InitHandler();
@@ -49,7 +52,7 @@ namespace HttpFileServer.Servers
 
             RegisterHandler("GET", new HttpGetHandler(_rootDir, _cacheSrv,EnableUpload));
             if (_enableJson)
-                RegisterHandler("GET", new HttpJsonGetHandler(_rootDir, _cacheSrv, EnableUpload));
+                RegisterHandler("GET", new HttpJsonGetHandler(_rootDir, _cacheSrv,_jsonCacheSrv, EnableUpload));
 
             if (EnableUpload)
                 RegisterHandler("POST", new HttpPostHandler(_rootDir));
@@ -58,12 +61,14 @@ namespace HttpFileServer.Servers
         protected override void OnLocalFileSrv_DirContentChanged(object sender, string path)
         {
             _cacheSrv.Delete(path);
+            _jsonCacheSrv.Delete(path);
             base.OnLocalFileSrv_DirContentChanged(sender, path);
         }
 
         protected override void OnLocalFileSrv_PathDeleted(object sender, string path)
         {
             _cacheSrv.Delete(path);
+            _jsonCacheSrv.Delete(path);
             base.OnLocalFileSrv_PathDeleted(sender, path);
         }
 
