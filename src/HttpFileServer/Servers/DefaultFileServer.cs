@@ -47,9 +47,9 @@ namespace HttpFileServer.Servers
         {
             RegisterHandler("HEAD", new HttpHeadHandler(_rootDir, _cacheSrv));
 
-            RegisterHandler("GET", new HttpGetHandler(_rootDir, _cacheSrv));
+            RegisterHandler("GET", new HttpGetHandler(_rootDir, _cacheSrv,EnableUpload));
             if (_enableJson)
-                RegisterHandler("GET", new HttpJsonGetHandler(_rootDir, _cacheSrv));
+                RegisterHandler("GET", new HttpJsonGetHandler(_rootDir, _cacheSrv, EnableUpload));
 
             if (EnableUpload)
                 RegisterHandler("POST", new HttpPostHandler(_rootDir));

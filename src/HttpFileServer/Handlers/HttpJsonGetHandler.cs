@@ -22,9 +22,10 @@ namespace HttpFileServer.Handlers
 
         #region Constructors
 
-        public HttpJsonGetHandler(string rootDir, CacheService cacheSrv) : base(rootDir, cacheSrv)
+        public HttpJsonGetHandler(string rootDir, CacheService cacheSrv, bool enableUpload = false) : base(rootDir, cacheSrv)
         {
             _cacheSrv = cacheSrv;
+            EnableUpload = enableUpload;
 
             _jsonSrv = new JsonService();
         }

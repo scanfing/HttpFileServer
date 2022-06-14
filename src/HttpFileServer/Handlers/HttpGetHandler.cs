@@ -20,9 +20,10 @@ namespace HttpFileServer.Handlers
 
         #region Constructors
 
-        public HttpGetHandler(string rootDir, CacheService cacheService) : base(rootDir)
+        public HttpGetHandler(string rootDir, CacheService cacheService, bool enableUpload = false) : base(rootDir)
         {
             _cacheSrv = cacheService;
+            EnableUpload = enableUpload;
         }
 
         #endregion Constructors
