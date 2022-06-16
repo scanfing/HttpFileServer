@@ -23,14 +23,14 @@
     <Window.Resources>
         <converters:BoolReverseConverter x:Key="boolReverse" />
     </Window.Resources>
-    <Grid Margin="5">
+    <Grid Margin="6">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="1*" />
         </Grid.RowDefinitions>
         <StackPanel>
-            <Grid Margin="0,5">
+            <Grid Margin="-5,2,0,2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="1*" />
@@ -58,7 +58,7 @@
                              Text="{Binding ListenPort, UpdateSourceTrigger=PropertyChanged}" />
                 </WrapPanel>
             </Grid>
-            <Grid Margin="0,5">
+            <Grid Margin="0,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*" />
                     <ColumnDefinition Width="Auto" />
@@ -109,8 +109,7 @@
         </StackPanel>
         <Grid x:Name="grdStatue"
               Grid.Row="1"
-              Height="100"
-              Margin="5,0,0,0">
+              Height="100">
             <DataGrid AutoGenerateColumns="False" ItemsSource="{Binding RequestModels}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Width="100"
@@ -131,7 +130,6 @@
         </Grid>
         <Grid x:Name="grdHistory"
               Grid.Row="2"
-              Margin="5,0,0,0"
               VerticalAlignment="Stretch">
             <TextBox x:Name="logs"
                      IsReadOnly="True"
