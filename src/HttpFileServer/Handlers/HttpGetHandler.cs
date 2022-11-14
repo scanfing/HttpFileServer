@@ -169,7 +169,7 @@ namespace HttpFileServer.Handlers
 
             var buff = new byte[81920];
             var rangeEnd = range.Item2 > range.Item1 ? range.Item2 : stream.Length - 1;
-            var bytesNeeds = rangeEnd - range.Item1;
+            var bytesNeeds = rangeEnd - range.Item1 + 1;
             response.StatusCode = (int)HttpStatusCode.PartialContent;
             try
             {
@@ -177,17 +177,22 @@ namespace HttpFileServer.Handlers
                     return;
 
                 stream.Seek(range.Item1, SeekOrigin.Begin);
-                while (bytesNeeds > 0)
+                while (response.OutputStream.CanWrite)
                 {
                     var readcount = stream.Read(buff, 0, 81920);
                     response.OutputStream.Write(buff, 0, (int)Math.Min(bytesNeeds, readcount));
-                    bytesNeeds -= readcount;
-                }
+                    if (readcount >= bytesNeeds)
+                        break;
 
-                await response.OutputStream.FlushAsync();
+                    bytesNeeds -= readcount;
+                    await Task.Delay(1);
+                }
+                if (response.OutputStream.CanWrite)
+                    await response.OutputStream.FlushAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                System.Diagnostics.Trace.TraceError(ex.Message);
                 //网络问题导致response.OutputStream无法写入
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
