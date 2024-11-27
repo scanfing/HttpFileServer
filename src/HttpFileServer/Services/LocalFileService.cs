@@ -23,7 +23,7 @@ namespace HttpFileServer.Services
             _watcher = new FileSystemWatcher(dstDirPath);
             _watcher.IncludeSubdirectories = true;
 
-            _watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            _watcher.NotifyFilter = NotifyFilters.Size | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
 
             _watcher.Created += _watcher_Created;
             _watcher.Deleted += _watcher_Deleted;
@@ -61,21 +61,21 @@ namespace HttpFileServer.Services
 
         private void _watcher_Changed(object sender, FileSystemEventArgs e)
         {
-            if (File.Exists(e.FullPath))
-                RaiseParentDirContentChanged(e.FullPath);
-            else
-                RaiseDirContentChanged(e.FullPath);
+            // 部分操作不会实时触发Changed事件，会延后触发（大概是操作后的读取列表动作），
+            // 直接暴力处理，不细化判断触发原因，RaiseParentDirContentChanged 会存在重复处理问题
+            // 文件大小发生变化也需要刷新缓存
+            RaiseParentDirContentChanged(e.FullPath);
         }
 
         private void _watcher_Created(object sender, FileSystemEventArgs e)
         {
-            //created 不做任何处理 用户访问地址时才创建对应缓存
-            //新建操作会触发父级路径的 _watcher_Changed 事件 在里面触发RaiseDirContentChanged事件
+            RaiseParentDirContentChanged(e.FullPath);
         }
 
         private void _watcher_Deleted(object sender, FileSystemEventArgs e)
         {
             RaisePathDeleted(e.FullPath);
+            RaiseParentDirContentChanged(e.FullPath);
         }
 
         private void _watcher_Renamed(object sender, RenamedEventArgs e)
