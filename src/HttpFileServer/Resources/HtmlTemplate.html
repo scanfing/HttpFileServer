@@ -1108,6 +1108,16 @@
             background: rgb(28, 184, 65);
             color: #ffffff;
         }
+
+        .contextmenu {
+            display: none;
+            position: absolute;
+            padding: 4px 12px;
+            background-color: #fff;
+            box-shadow: 0px 0px 6px #bebebe;
+            border-radius: 3px;
+            cursor: pointer;
+        }
     </style>
 
     <title id="title">{{title}}</title>
@@ -1127,7 +1137,7 @@
                     <th>修改时间</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="serverFiles">
                 {{tableRows}}
             </tbody>
         </table>
@@ -1135,6 +1145,81 @@
     <section class="footer">
         {{footerSectionContent}}
     </section>
+
+    <!-- 右键菜单 -->
+    <section id="contextmenu" class="contextmenu">
+        <div data-type="download">打包下载</div>
+    </section>
+    <!-- 右键菜单 -->
     {{uploadSection}}
+
+    <script>
+        // 右键菜单
+        document.getElementById('serverFiles').addEventListener('contextmenu', (e) => {
+            e.preventDefault()
+            const isDir = e.target.className === 'icon dir'
+            const contextMenu = document.getElementById('contextmenu')
+            contextMenu.style.display = 'none';
+            if (!isDir) return
+            const menuWidth = contextMenu.offsetWidth;
+            const menuHeight = contextMenu.offsetHeight;
+
+            let x = e.clientX, y = e.clientY;
+
+            if (x + menuWidth > window.innerWidth) {
+                x = window.innerWidth - menuWidth; // 调整水平位置
+            }
+
+            if (y + menuHeight > window.innerHeight) {
+                y = window.innerHeight - menuHeight; // 调整垂直位置
+            }
+
+            const downloadEle = contextMenu.children[0]
+            // 设置下载按钮参数 假设下载参数为id
+            downloadEle.dataset.url = e.target.href.slice(0, -1)
+
+            contextMenu.style.top = `${y}px`;
+            contextMenu.style.left = `${x}px`;
+            contextMenu.style.display = 'block';
+        })
+
+        document.addEventListener('click', (e) => {
+            const contextMenu = document.getElementById('contextmenu')
+            contextMenu.style.display = 'none';
+        })
+
+        document.getElementById('contextmenu').addEventListener('click', (event) => {
+            const type = event.target.dataset.type
+            if (type === 'download') {
+                const url = event.target.dataset.url
+                downloadZip(url)
+            }
+        })
+
+        function downloadZip(url) {
+            if (!url) return
+            const filename = decodeURI(url.slice(url.lastIndexOf('/') + 1)) + '.zip'
+            fetch(
+                url,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/zip'
+                    }
+                }
+            ).then(res => res.blob()).then(blob => {
+                const link = document.createElement('a');
+                const objectUrl = URL.createObjectURL(blob);
+
+                link.href = objectUrl;
+                link.download = filename
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(objectUrl);
+            })
+        }
+        // 右键菜单
+    </script>
 </body>
 </html>

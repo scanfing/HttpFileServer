@@ -207,14 +207,14 @@ namespace HttpFileServer.Handlers
 
             resp.ContentType = "application/zip";
             resp.ContentEncoding = Encoding.UTF8;
-            var dirname = Path.GetDirectoryName(path);
+            var dirname = Path.GetFileName(path);
             if (request.Url.LocalPath != "/")
             {
-                dirname = Path.GetDirectoryName(request.Url.LocalPath).Trim('\\').Trim();
+                dirname = Path.GetFileName(request.Url.LocalPath).Trim('\\').Trim();
             }
 
             dirname = dirname.Replace(SourceDir, "");
-            var dsiposition = $"attachment; filename={Uri.EscapeUriString(dirname)}.zip";
+            var dsiposition = $"attachment; filename={dirname}.zip";
             try
             {
                 resp.Headers.Set("Content-Disposition", dsiposition);
@@ -267,18 +267,18 @@ namespace HttpFileServer.Handlers
             System.Diagnostics.Trace.TraceInformation($"{DateTime.Now} {dirname}.zip Zip Done, Length: {memStream.Length} ");
             resp.ContentLength64 = memStream.Length;
             memStream.Position = 0;
-            //var buff = new byte[81920];
-            //while (true)
-            //{
-            //    var count = memStream.Read(buff, 0, 81920);
-            //    await resp.OutputStream.WriteAsync(buff, 0, count);
-            //    await resp.OutputStream.FlushAsync();
-            //    if (count < 81920)
-            //    {
-            //        break;
-            //    }
-            //}
-            await memStream.CopyToAsync(resp.OutputStream);
+            var buff = new byte[81920];
+            while (true)
+            {
+                var count = memStream.Read(buff, 0, 81920);
+                await resp.OutputStream.WriteAsync(buff, 0, count);
+                await resp.OutputStream.FlushAsync();
+                if (count < 81920)
+                {
+                    break;
+                }
+            }
+            //await memStream.CopyToAsync(resp.OutputStream);
             memStream.Close();
             memStream.Dispose();
             memStream = null;
