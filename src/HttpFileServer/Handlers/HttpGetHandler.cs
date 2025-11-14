@@ -214,7 +214,7 @@ namespace HttpFileServer.Handlers
             }
 
             dirname = dirname.Replace(SourceDir, "");
-            var dsiposition = $"attachment; filename={dirname}.zip";
+            var dsiposition = $"attachment; filename={Uri.EscapeUriString(dirname)}.zip";
             try
             {
                 resp.Headers.Set("Content-Disposition", dsiposition);

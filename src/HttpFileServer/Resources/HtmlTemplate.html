@@ -1198,8 +1198,8 @@
 
         function downloadZip(url) {
             if (!url) return
-            //const filename = decodeURI(url.slice(url.lastIndexOf('/') + 1)) + '.zip'
-            const filename = url.slice(url.lastIndexOf('/') + 1) + '.zip'
+            const filename = decodeURI(url.slice(url.lastIndexOf('/') + 1)) + '.zip'
+            //const filename = url.slice(url.lastIndexOf('/') + 1) + '.zip'
             fetch(
                 url,
                 {
