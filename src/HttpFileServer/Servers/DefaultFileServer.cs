@@ -23,9 +23,9 @@ namespace HttpFileServer.Servers
 
         private CacheService _cacheSrv;
 
-        private CacheService _jsonCacheSrv;
-
         private bool _enableJson;
+        private CacheService _jsonCacheSrv;
+        private JsonService _jsonService;
         private string _rootDir;
 
         #endregion Fields
@@ -38,6 +38,7 @@ namespace HttpFileServer.Servers
             _cacheSrv = CacheService.GetDefault();
             _jsonCacheSrv = new CacheService();
             _enableJson = enableJson;
+            _jsonService = new JsonService();
 
             InitHandler();
         }
@@ -48,11 +49,9 @@ namespace HttpFileServer.Servers
 
         protected void InitHandler()
         {
-            RegisterHandler("HEAD", new HttpHeadHandler(_rootDir, _cacheSrv));
+            RegisterHandler("HEAD", new HttpHeadHandler(_rootDir, _cacheSrv, _jsonCacheSrv, _jsonService));
 
-            RegisterHandler("GET", new HttpGetHandler(_rootDir, _cacheSrv,EnableUpload));
-            if (_enableJson)
-                RegisterHandler("GET", new HttpJsonGetHandler(_rootDir, _cacheSrv,_jsonCacheSrv, EnableUpload));
+            RegisterHandler("GET", new HttpGetHandler(_rootDir, _cacheSrv, _jsonCacheSrv, _jsonService, EnableUpload, _enableJson));
 
             if (EnableUpload)
                 RegisterHandler("POST", new HttpPostHandler(_rootDir));

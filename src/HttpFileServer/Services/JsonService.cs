@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace HttpFileServer.Services
 {
@@ -49,7 +50,7 @@ namespace HttpFileServer.Services
         /// <returns></returns>
         public string SerializeObject<T>(T value)
         {
-            return JsonConvert.SerializeObject(value);
+            return JsonConvert.SerializeObject(value, Newtonsoft.Json.Formatting.Indented);
         }
 
         #endregion Methods

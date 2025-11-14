@@ -85,6 +85,7 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
@@ -120,7 +121,6 @@
     <Compile Include="Handlers\HttpGetHandler.cs" />
     <Compile Include="Handlers\HttpHandlerBase.cs" />
     <Compile Include="Handlers\HttpHeadHandler.cs" />
-    <Compile Include="Handlers\HttpJsonGetHandler.cs" />
     <Compile Include="Handlers\HttpPostFileHandler.cs" />
     <Compile Include="Handlers\IHttpHandler.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

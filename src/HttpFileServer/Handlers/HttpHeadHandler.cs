@@ -20,7 +20,7 @@ namespace HttpFileServer.Handlers
 
         #region Constructors
 
-        public HttpHeadHandler(string rootDir, CacheService cacheService) : base(rootDir, cacheService)
+        public HttpHeadHandler(string rootDir, CacheService cacheService, CacheService jsonCacheService, JsonService jsonSrv) : base(rootDir, cacheService, jsonCacheService, jsonSrv)
         {
             _cacheSrv = cacheService;
         }

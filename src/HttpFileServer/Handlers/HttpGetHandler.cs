@@ -1,12 +1,17 @@
-﻿using HttpFileServer.Services;
+﻿using HttpFileServer.Core;
+using HttpFileServer.Services;
 using HttpFileServer.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Mime;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace HttpFileServer.Handlers
 {
@@ -16,14 +21,23 @@ namespace HttpFileServer.Handlers
 
         private CacheService _cacheSrv;
 
+        private CacheService _jsonCacheSrv;
+
+        private JsonService _jsonSrv;
+
         #endregion Fields
+
+        public bool EnableJson { get; private set; }
 
         #region Constructors
 
-        public HttpGetHandler(string rootDir, CacheService cacheService, bool enableUpload = false) : base(rootDir)
+        public HttpGetHandler(string rootDir, CacheService cacheService, CacheService jsonCacheService, JsonService jsonService, bool enableUpload = false, bool enableJson = true) : base(rootDir)
         {
             _cacheSrv = cacheService;
+            _jsonCacheSrv = jsonCacheService;
+            _jsonSrv = jsonService;
             EnableUpload = enableUpload;
+            EnableJson = enableJson;
         }
 
         #endregion Constructors
@@ -34,6 +48,21 @@ namespace HttpFileServer.Handlers
         {
             var request = context.Request;
             var response = context.Response;
+
+            var useJson = request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
+            if (useJson && EnableJson)
+            {
+                await ProcessJsonRequest(context);
+                return;
+            }
+
+            var zipDownload = request.AcceptTypes.Any(p => p.Equals("application/zip", StringComparison.OrdinalIgnoreCase));
+            if (zipDownload)
+            {
+                await ProcessZipRequest(context);
+                return;
+            }
+
             var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
             var dstpath = tmp.Replace('/', '\\');
             //IfNoMatchCheck
@@ -96,6 +125,130 @@ namespace HttpFileServer.Handlers
             }
 
             return new Tuple<string, Stream, bool>(contentType, stream, fileExist);
+        }
+
+        protected virtual async Task ProcessJsonRequest(HttpListenerContext context)
+        {
+            var request = context.Request;
+            var response = context.Response;
+
+            var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
+            var dstpath = tmp.Replace('/', '\\');
+            //IfNoMatchCheck
+            var requestETag = request.Headers["If-None-Match"];
+            var cacheTag = _jsonCacheSrv.GetPathCacheId(dstpath);
+
+            if (requestETag == cacheTag)
+            {
+                response.StatusCode = (int)HttpStatusCode.NotModified;
+            }
+            else
+            {
+                response.AppendHeader("Cache-Control", "no-cache");
+                response.AppendHeader("Etag", cacheTag);
+                //文件
+                if (File.Exists(dstpath))
+                {
+                    if (request.Headers.AllKeys.Count(p => p.ToLower() == "range") > 0)
+                        await ResponseContentPartial(dstpath, request, response);
+                    else
+                        await ResponseContentFull(dstpath, request, response);
+                    return;
+                }
+
+                //目录
+                response.AddHeader("Content-Type", "application/json");
+
+                var buff = _jsonCacheSrv.GetCache(dstpath);
+
+                if (buff is null)
+                {
+                    DirInfoResponse respObj = new DirInfoResponse();
+                    var dirinfo = new DirectoryInfo(dstpath);
+                    respObj.LastWriteTime = dirinfo.LastWriteTime;
+                    respObj.Name = dirinfo.Name;
+                    respObj.RelativePath = Path.GetFullPath(dstpath).Replace(SourceDir, "/");
+
+                    var dirs = Directory.GetDirectories(dstpath);
+                    var files = Directory.GetFiles(dstpath);
+                    var dlst = new List<DirPathInfo>();
+                    var flst = new List<FilePathInfo>();
+                    foreach (var p in dirs)
+                    {
+                        var dinfo = p.GetPathInfo(SourceDir) as DirPathInfo;
+                        dlst.Add(dinfo);
+                    }
+                    foreach (var f in files)
+                    {
+                        var finfo = f.GetPathInfo(SourceDir) as FilePathInfo;
+                        flst.Add(finfo);
+                    }
+                    respObj.Directories = dlst.ToArray();
+                    respObj.Files = flst.ToArray();
+
+                    var content = _jsonSrv.SerializeObject(respObj);
+                    buff = Encoding.UTF8.GetBytes(content);
+                    _jsonCacheSrv.SaveCache(dstpath, buff);
+                }
+
+                response.ContentLength64 = buff.LongLength;
+                var stream = new MemoryStream(buff);
+                await stream.CopyToAsync(response.OutputStream);
+            }
+        }
+
+        protected async Task<bool> ProcessZipRequest(HttpListenerContext context)
+        {
+            var request = context.Request;
+            var resp = context.Response;
+
+            var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
+            var path = tmp.Replace('/', '\\');
+
+            resp.ContentType = "application/zip";
+            var dirname = Path.GetDirectoryName(path);
+            resp.Headers.Add("Content-Disposition", "attachment; filename=\"{dirname}.zip\"");
+            using (var archive = new ZipArchive(context.Response.OutputStream, ZipArchiveMode.Create, true))
+            {
+                if (Directory.Exists(path))
+                {
+                    var subdirs = Directory.GetDirectories(path, "*", SearchOption.AllDirectories);
+                    var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
+                    foreach (var direntry in subdirs)
+                    {
+                        var zipEntry = archive.CreateEntry(path.Replace(path, ""));
+                    }
+                    foreach (var file in files)
+                    {
+                        // 添加文件到ZIP存档中
+                        var zipEntry = archive.CreateEntry(Path.GetFileName(file));
+                        using (var entryStream = zipEntry.Open())
+                        {
+                            using (var fileStream = File.OpenRead(file))
+                            {
+                                await fileStream.CopyToAsync(entryStream);
+                            }
+                        }
+                    }
+                }
+                else if (File.Exists(path))
+                {
+                    var zipEntry = archive.CreateEntry(Path.GetFileName(path));
+                    using (var entryStream = zipEntry.Open())
+                    {
+                        using (var fileStream = File.OpenRead(path))
+                        {
+                            await fileStream.CopyToAsync(entryStream);
+                        }
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
