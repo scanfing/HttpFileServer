@@ -1198,8 +1198,6 @@
 
         function downloadZip(url) {
             if (!url) return
-            const filename = decodeURI(url.slice(url.lastIndexOf('/') + 1)) + '.zip'
-            //const filename = url.slice(url.lastIndexOf('/') + 1) + '.zip'
             fetch(
                 url,
                 {
@@ -1208,12 +1206,19 @@
                         'Accept': 'application/zip'
                     }
                 }
-            ).then(res => res.blob()).then(blob => {
+            ).then(async res => {
+                const headerVal = res.headers.get('content-disposition')
+                const filename = headerVal.match(/filename="?(.+?)"?$/i)[1]
+                return {
+                    filename: decodeURI(filename),
+                    blob: await res.blob()
+                }
+            }).then(res => {
                 const link = document.createElement('a');
-                const objectUrl = URL.createObjectURL(blob);
+                const objectUrl = URL.createObjectURL(res.blob);
 
                 link.href = objectUrl;
-                link.download = filename
+                link.download = res.filename
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
