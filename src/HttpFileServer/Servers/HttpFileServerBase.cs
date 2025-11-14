@@ -168,7 +168,7 @@ namespace HttpFileServer.Servers
                 try { response.Close(); }
                 catch { }
                 RecordLog($"{remotePoint} {method} {url} {range} {response.StatusCode}");
-                RaiseRequestOut(requestModel);
+                RaiseRequestOut(requestModel);                
             }
         }
 

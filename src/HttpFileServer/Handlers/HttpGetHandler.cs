@@ -206,22 +206,32 @@ namespace HttpFileServer.Handlers
             var path = tmp.Replace('/', '\\');
 
             resp.ContentType = "application/zip";
-            var dirname = Path.GetDirectoryName(path);
-            resp.Headers.Add("Content-Disposition", "attachment; filename=\"{dirname}.zip\"");
-            using (var archive = new ZipArchive(context.Response.OutputStream, ZipArchiveMode.Create, true))
+            resp.ContentEncoding = Encoding.UTF8;
+            var dirname = Path.GetDirectoryName(request.Url.LocalPath).Trim('\\').Trim();
+            dirname = dirname.Replace(SourceDir, "");
+            var dsiposition = $"attachment; filename={Uri.EscapeUriString(dirname)}.zip";
+            try
+            {
+                resp.Headers.Set("Content-Disposition", dsiposition);
+            }
+            catch (Exception ex)
+            {
+            }
+
+            var memStream = new MemoryStream();
+            using (var archive = new ZipArchive(memStream, ZipArchiveMode.Update, true))
             {
                 if (Directory.Exists(path))
                 {
                     var subdirs = Directory.GetDirectories(path, "*", SearchOption.AllDirectories);
                     var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
-                    foreach (var direntry in subdirs)
-                    {
-                        var zipEntry = archive.CreateEntry(path.Replace(path, ""));
-                    }
+
                     foreach (var file in files)
                     {
+                        var fileName = file.Replace(path, "").Trim('\\').Trim();
+                        System.Diagnostics.Trace.WriteLine($"ZIP -> {fileName}");
                         // 添加文件到ZIP存档中
-                        var zipEntry = archive.CreateEntry(Path.GetFileName(file));
+                        var zipEntry = archive.CreateEntry(fileName);
                         using (var entryStream = zipEntry.Open())
                         {
                             using (var fileStream = File.OpenRead(file))
@@ -233,10 +243,12 @@ namespace HttpFileServer.Handlers
                 }
                 else if (File.Exists(path))
                 {
-                    var zipEntry = archive.CreateEntry(Path.GetFileName(path));
+                    var file = path;
+                    var relfilename = Path.GetFileName(file);
+                    var zipEntry = archive.CreateEntry(relfilename);
                     using (var entryStream = zipEntry.Open())
                     {
-                        using (var fileStream = File.OpenRead(path))
+                        using (var fileStream = File.OpenRead(file))
                         {
                             await fileStream.CopyToAsync(entryStream);
                         }
@@ -247,7 +259,24 @@ namespace HttpFileServer.Handlers
                     return false;
                 }
             }
-
+            resp.ContentLength64 = memStream.Length;
+            memStream.Position = 0;
+            var buff = new byte[81920];
+            while (true)
+            {
+                var count = memStream.Read(buff, 0, 81920);
+                await resp.OutputStream.WriteAsync(buff, 0, count);
+                await resp.OutputStream.FlushAsync();
+                if (count < 81920)
+                {
+                    break;
+                }
+            }
+            memStream.Close();
+            memStream.Dispose();
+            await resp.OutputStream.FlushAsync();
+            resp.Close();
+            System.Diagnostics.Trace.TraceInformation($"{dirname}.zip Done.");
             return true;
         }
 
