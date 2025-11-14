@@ -207,7 +207,12 @@ namespace HttpFileServer.Handlers
 
             resp.ContentType = "application/zip";
             resp.ContentEncoding = Encoding.UTF8;
-            var dirname = Path.GetDirectoryName(request.Url.LocalPath).Trim('\\').Trim();
+            var dirname = Path.GetDirectoryName(path);
+            if (request.Url.LocalPath != "/")
+            {
+                dirname = Path.GetDirectoryName(request.Url.LocalPath).Trim('\\').Trim();
+            }
+
             dirname = dirname.Replace(SourceDir, "");
             var dsiposition = $"attachment; filename={Uri.EscapeUriString(dirname)}.zip";
             try
@@ -228,10 +233,10 @@ namespace HttpFileServer.Handlers
 
                     foreach (var file in files)
                     {
-                        var fileName = file.Replace(path, "").Trim('\\').Trim();
-                        System.Diagnostics.Trace.WriteLine($"ZIP -> {fileName}");
+                        var subFileName = file.Replace(path, "").Trim('\\').Trim();
+                        System.Diagnostics.Trace.WriteLine($"{DateTime.Now} ZIP -> {subFileName}");
                         // 添加文件到ZIP存档中
-                        var zipEntry = archive.CreateEntry(fileName);
+                        var zipEntry = archive.CreateEntry(subFileName);
                         using (var entryStream = zipEntry.Open())
                         {
                             using (var fileStream = File.OpenRead(file))
@@ -259,24 +264,28 @@ namespace HttpFileServer.Handlers
                     return false;
                 }
             }
+            System.Diagnostics.Trace.TraceInformation($"{DateTime.Now} {dirname}.zip Zip Done, Length: {memStream.Length} ");
             resp.ContentLength64 = memStream.Length;
             memStream.Position = 0;
-            var buff = new byte[81920];
-            while (true)
-            {
-                var count = memStream.Read(buff, 0, 81920);
-                await resp.OutputStream.WriteAsync(buff, 0, count);
-                await resp.OutputStream.FlushAsync();
-                if (count < 81920)
-                {
-                    break;
-                }
-            }
+            //var buff = new byte[81920];
+            //while (true)
+            //{
+            //    var count = memStream.Read(buff, 0, 81920);
+            //    await resp.OutputStream.WriteAsync(buff, 0, count);
+            //    await resp.OutputStream.FlushAsync();
+            //    if (count < 81920)
+            //    {
+            //        break;
+            //    }
+            //}
+            await memStream.CopyToAsync(resp.OutputStream);
             memStream.Close();
             memStream.Dispose();
+            memStream = null;
             await resp.OutputStream.FlushAsync();
-            resp.Close();
-            System.Diagnostics.Trace.TraceInformation($"{dirname}.zip Done.");
+            resp.StatusCode = 200;
+
+            System.Diagnostics.Trace.TraceInformation($"{DateTime.Now} {dirname}.zip Response Done.");
             return true;
         }
 
