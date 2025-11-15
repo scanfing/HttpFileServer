@@ -34,6 +34,11 @@ namespace HttpFileServer
                 var buff = DllResource.Newtonsoft_Json;
                 return Assembly.Load(buff);
             }
+            else if ("ICSharpCode.SharpZipLib".Equals(assname))
+            {
+                var buff = DllResource.ICSharpCode_SharpZipLib;
+                return Assembly.Load(buff);
+            }
             return null;
         }
 

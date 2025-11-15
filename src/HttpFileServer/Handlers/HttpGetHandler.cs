@@ -1,6 +1,7 @@
 ﻿using HttpFileServer.Core;
 using HttpFileServer.Services;
 using HttpFileServer.Utils;
+using ICSharpCode.SharpZipLib.Zip;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -44,10 +45,34 @@ namespace HttpFileServer.Handlers
 
         #region Methods
 
+        private static string GetMimeType(string filePath)
+        {
+            var ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+            switch (ext)
+            {
+                case ".txt": return "text/plain";
+                case ".md": return "text/markdown";
+                case ".log": return "text/plain";
+                case ".csv": return "text/csv";
+                case ".json": return "application/json";
+                case ".xml": return "application/xml";
+                case ".jpg": case ".jpeg": return "image/jpeg";
+                case ".png": return "image/png";
+                case ".gif": return "image/gif";
+                case ".bmp": return "image/bmp";
+                case ".webp": return "image/webp";
+                case ".pdf": return "application/pdf";
+                case ".html": case ".htm": return "text/html";
+                default: return "application/octet-stream";
+            }
+        }
+
         public override async Task ProcessRequest(HttpListenerContext context)
         {
             var request = context.Request;
             var response = context.Response;
+            var url = request.Url.ToString();
+            var isPreview = url.Contains("priview=1");
 
             var useJson = request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
             if (useJson && EnableJson)
@@ -67,17 +92,26 @@ namespace HttpFileServer.Handlers
                 zipDownload = request.AcceptTypes.Any(p => p.Equals("application/zip", StringComparison.OrdinalIgnoreCase));
             }
 
+            //预览时不触发下载/zip逻辑，直接正常响应内容
+            if (isPreview)
+            {
+                var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
+                var dstpath = tmp.Replace('/', '\\');
+                await ResponseContentFull(dstpath, request, response, false, true);
+                return;
+            }
+
             if (zipDownload)
             {
                 await ProcessZipRequest(context);
                 return;
             }
 
-            var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
-            var dstpath = tmp.Replace('/', '\\');
+            var tmp2 = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
+            var dstpath2 = tmp2.Replace('/', '\\');
             //IfNoMatchCheck
             var requestETag = request.Headers["If-None-Match"];
-            var cacheTag = _cacheSrv.GetPathCacheId(dstpath);
+            var cacheTag = _cacheSrv.GetPathCacheId(dstpath2);
 
             if (requestETag == cacheTag)
             {
@@ -87,10 +121,10 @@ namespace HttpFileServer.Handlers
             {
                 response.AppendHeader("Cache-Control", "no-cache");
                 response.AppendHeader("Etag", cacheTag);
-                if (request.Headers.AllKeys.Count(p => p.ToLower() == "range") > 0)
-                    await ResponseContentPartial(dstpath, request, response);
+                if (request.Headers.AllKeys.Count(p => p.ToLower() == "range") >0)
+                    await ResponseContentPartial(dstpath2, request, response);
                 else
-                    await ResponseContentFull(dstpath, request, response);
+                    await ResponseContentFull(dstpath2, request, response);
             }
         }
 
@@ -222,79 +256,58 @@ namespace HttpFileServer.Handlers
             {
                 dirname = Path.GetFileName(request.Url.LocalPath).Trim('\\').Trim();
             }
-
             dirname = dirname.Replace(SourceDir, "");
             var dsiposition = $"attachment; filename={Uri.EscapeUriString(dirname)}.zip";
             try
             {
                 resp.Headers.Set("Content-Disposition", dsiposition);
             }
-            catch (Exception ex)
-            {
-            }
+            catch (Exception ex) { }
 
-            var memStream = new MemoryStream();
-            using (var archive = new ZipArchive(memStream, ZipArchiveMode.Update, true))
+            using (var zipStream = new ZipOutputStream(resp.OutputStream))
             {
+                zipStream.SetLevel(3); // 压缩等级0-9
                 if (Directory.Exists(path))
                 {
-                    var subdirs = Directory.GetDirectories(path, "*", SearchOption.AllDirectories);
                     var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
-
                     foreach (var file in files)
                     {
-                        var subFileName = file.Replace(path, "").Trim('\\').Trim();
-                        System.Diagnostics.Trace.WriteLine($"{DateTime.Now} ZIP -> {subFileName}");
-                        // 添加文件到ZIP存档中
-                        var zipEntry = archive.CreateEntry(subFileName);
-                        using (var entryStream = zipEntry.Open())
+                        var subFileName = file.Substring(path.Length).TrimStart('\\', '/');
+                        var entry = new ZipEntry(subFileName)
                         {
-                            using (var fileStream = File.OpenRead(file))
-                            {
-                                await fileStream.CopyToAsync(entryStream);
-                            }
+                            DateTime = File.GetLastWriteTime(file)
+                        };
+                        zipStream.PutNextEntry(entry);
+                        using (var fs = File.OpenRead(file))
+                        {
+                            await fs.CopyToAsync(zipStream);
                         }
+                        zipStream.CloseEntry();
                     }
                 }
                 else if (File.Exists(path))
                 {
-                    var file = path;
-                    var relfilename = Path.GetFileName(file);
-                    var zipEntry = archive.CreateEntry(relfilename);
-                    using (var entryStream = zipEntry.Open())
+                    var relfilename = Path.GetFileName(path);
+                    var entry = new ZipEntry(relfilename)
                     {
-                        using (var fileStream = File.OpenRead(file))
-                        {
-                            await fileStream.CopyToAsync(entryStream);
-                        }
+                        DateTime = File.GetLastWriteTime(path)
+                    };
+                    zipStream.PutNextEntry(entry);
+                    using (var fs = File.OpenRead(path))
+                    {
+                        await fs.CopyToAsync(zipStream);
                     }
+                    zipStream.CloseEntry();
                 }
                 else
                 {
+                    resp.StatusCode = 404;
                     return false;
                 }
+                zipStream.Finish();
             }
-            System.Diagnostics.Trace.TraceInformation($"{DateTime.Now} {dirname}.zip Zip Done, Length: {memStream.Length} ");
-            resp.ContentLength64 = memStream.Length;
-            memStream.Position = 0;
-            var buff = new byte[81920];
-            while (true)
-            {
-                var count = memStream.Read(buff, 0, 81920);
-                await resp.OutputStream.WriteAsync(buff, 0, count);
-                await resp.OutputStream.FlushAsync();
-                if (count < 81920)
-                {
-                    break;
-                }
-            }
-            //await memStream.CopyToAsync(resp.OutputStream);
-            memStream.Close();
-            memStream.Dispose();
-            memStream = null;
             await resp.OutputStream.FlushAsync();
             resp.StatusCode = 200;
-
             System.Diagnostics.Trace.TraceInformation($"{DateTime.Now} {dirname}.zip Response Done.");
             return true;
         }
@@ -306,10 +319,18 @@ namespace HttpFileServer.Handlers
         /// <param name="request"></param>
         /// <param name="response"></param>
         /// <returns></returns>
-        protected async Task ResponseContentFull(string path, HttpListenerRequest request, HttpListenerResponse response, bool onlyHead = false)
+        protected async Task ResponseContentFull(string path, HttpListenerRequest request, HttpListenerResponse response, bool onlyHead = false, bool isPreview = false)
         {
             var tp = await GetResponseContentTypeAndStream(path);
-            response.AddHeader("Content-Type", tp.Item1);
+            //预览时只设置Content-Type，不设置Content-Disposition
+            if (isPreview)
+            {
+                response.ContentType = GetMimeType(path);
+            }
+            else
+            {
+                response.AddHeader("Content-Type", tp.Item1);
+            }
             var stream = tp.Item2;
             if (stream is null)
             {
@@ -325,7 +346,6 @@ namespace HttpFileServer.Handlers
             }
             catch (Exception)
             {
-                //网络问题导致response.OutputStream无法写入
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
             finally
@@ -345,46 +365,60 @@ namespace HttpFileServer.Handlers
         protected async Task ResponseContentPartial(string path, HttpListenerRequest request, HttpListenerResponse response, bool onlyHead = false)
         {
             var rangeStr = request.Headers["Range"];
-            var range = GetRequestRange(rangeStr);
-
-            if (range.Item1 < 0)
+            if (string.IsNullOrEmpty(rangeStr) || !rangeStr.StartsWith("bytes="))
             {
                 response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
+                System.Diagnostics.Trace.TraceWarning($"Range header missing or invalid: '{rangeStr}'");
+                return;
+            }
+            Tuple<long, long> range;
+            try
+            {
+                range = GetRequestRange(rangeStr);
+            }
+            catch (Exception ex)
+            {
+                response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
+                System.Diagnostics.Trace.TraceError($"Range parse error: {rangeStr}, Exception: {ex}");
+                return;
+            }
+            if (range.Item1 <0)
+            {
+                response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
+                System.Diagnostics.Trace.TraceWarning($"Range start <0: {rangeStr}");
                 return;
             }
             var tp = await GetResponseContentTypeAndStream(path);
             response.AddHeader("Content-Type", tp.Item1);
             var stream = tp.Item2;
-            if (stream is null)
+            if (stream is null || !stream.CanRead)
             {
                 response.StatusCode = (int)HttpStatusCode.NotFound;
+                System.Diagnostics.Trace.TraceError($"File stream not available or not readable: {path}");
                 return;
             }
-            if (range.Item1 > stream.Length || range.Item2 > stream.Length)
+            if (range.Item1 > stream.Length || range.Item2 > stream.Length || range.Item1 >= stream.Length)
             {
                 response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
+                System.Diagnostics.Trace.TraceWarning($"Range out of bounds: {rangeStr}, FileLength: {stream.Length}");
                 return;
             }
-
             response.AddHeader("Content-Range", $"bytes {range.Item1}-{range.Item2}/{stream.Length}");
-
             var buff = new byte[81920];
-            var rangeEnd = range.Item2 > range.Item1 ? range.Item2 : stream.Length - 1;
-            var bytesNeeds = rangeEnd - range.Item1 + 1;
+            var rangeEnd = range.Item2 > range.Item1 ? range.Item2 : stream.Length -1;
+            var bytesNeeds = rangeEnd - range.Item1 +1;
             response.StatusCode = (int)HttpStatusCode.PartialContent;
             try
             {
                 if (onlyHead)
                     return;
-
                 stream.Seek(range.Item1, SeekOrigin.Begin);
-                while (response.OutputStream.CanWrite)
+                while (response.OutputStream.CanWrite && bytesNeeds >0)
                 {
-                    var readcount = stream.Read(buff, 0, 81920);
-                    response.OutputStream.Write(buff, 0, (int)Math.Min(bytesNeeds, readcount));
-                    if (readcount >= bytesNeeds)
+                    var readcount = await stream.ReadAsync(buff,0, (int)Math.Min(buff.Length, bytesNeeds));
+                    if (readcount <=0)
                         break;
-
+                    await response.OutputStream.WriteAsync(buff,0, readcount);
                     bytesNeeds -= readcount;
                     await Task.Delay(1);
                 }
@@ -393,9 +427,8 @@ namespace HttpFileServer.Handlers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Trace.TraceError(ex.Message);
-                //网络问题导致response.OutputStream无法写入
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                System.Diagnostics.Trace.TraceError($"PartialContent error: Path={path}, Range={rangeStr}, Exception={ex}");
             }
             finally
             {

@@ -63,6 +63,16 @@ namespace HttpFileServer.Resources {
         /// <summary>
         ///   查找 System.Byte[] 类型的本地化资源。
         /// </summary>
+        internal static byte[] ICSharpCode_SharpZipLib {
+            get {
+                object obj = ResourceManager.GetObject("ICSharpCode_SharpZipLib", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Byte[] 类型的本地化资源。
+        /// </summary>
         internal static byte[] Newtonsoft_Json {
             get {
                 object obj = ResourceManager.GetObject("Newtonsoft_Json", resourceCulture);
