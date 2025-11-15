@@ -1325,18 +1325,30 @@
             }
             window.open(url, '_blank');
         }
+        // 修复 preview 参数拼写
         function previewFile(url) {
             if (!url) return;
-            if (!url.includes('?priview=1')) {
-                if (url.includes('?')) {
-                    url += '&priview=1';
-                } else {
-                    url += '?priview=1';
-                }
-            }
-            window.open(url, '_blank');
+            if (!url.includes('?preview=1')) {
+   if (url.includes('?')) {
+      url += '&preview=1';
+        } else {
+   url += '?preview=1';
+   }
+    }
+    window.open(url, '_blank');
         }
-        // 右键菜单
+        // 预览按钮只对常见可预览文件显示（含md）
+        document.getElementById('contextmenu').addEventListener('click', (event) => {
+    const type = event.target.dataset.type
+    if (type === 'download') {
+    const url = event.target.dataset.url
+    downloadZip(url)
+    }
+if (type === 'preview') {
+   const url = event.target.dataset.url
+   previewFile(url)
+    }
+});
 
         let previewTimer = null;
         let previewFloat = null;

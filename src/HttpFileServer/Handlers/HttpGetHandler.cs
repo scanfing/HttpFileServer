@@ -60,7 +60,7 @@ namespace HttpFileServer.Handlers
                 return;
             }
 
-            var isPreview = url.Contains("priview=1");
+            var isPreview = url.Contains("preview=1");
 
             var useJson = request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
             if (useJson && EnableJson)
