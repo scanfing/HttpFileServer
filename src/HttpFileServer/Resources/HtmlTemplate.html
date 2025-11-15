@@ -1382,9 +1382,9 @@
             }
 
             previewFloat.innerHTML = `
-                                         <div style="font-weight:bold;">${fileName}</div>
-                                         <div style="margin-top:4px;">${previewContent}</div>
-                                         `;
+                                                     <div style="font-weight:bold;">${fileName}</div>
+                                                     <div style="margin-top:4px;">${previewContent}</div>
+                                                     `;
 
             const rect = target.getBoundingClientRect();
             let top = rect.top + window.scrollY - previewFloat.offsetHeight - 8;
@@ -1487,10 +1487,10 @@
             files.forEach((file) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                                         <td class="filename"><a href="${file.url}" class="icon ${file.type}" ${file.type === 'directory' ? 'data-type="dir"' : ''}>${file.name}</a></td>
-                                         <td class="filesize">${file.size > 0 ? (file.size / 1024).toFixed(1) + ' KB' : '-'}</td>
-                                         <td class="filetime">${formatDate(file.lastModified)}</td>
-                                         `;
+                                                     <td class="filename"><a href="${file.url}" class="icon ${file.type}" ${file.type === 'directory' ? 'data-type="dir"' : ''}>${file.name}</a></td>
+                                                     <td class="filesize">${file.size > 0 ? (file.size / 1024).toFixed(1) + ' KB' : '-'}</td>
+                                                     <td class="filetime">${formatDate(file.lastModified)}</td>
+                                                     `;
                 serverFilesTable.appendChild(tr);
             });
         }
@@ -1521,10 +1521,10 @@
             files.forEach((file) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                                         <td class="filename"><a href="${file.url}" class="icon ${file.type}" ${file.type === 'directory' ? 'data-type="dir"' : ''}>${file.name}</a></td>
-                                         <td class="filesize">${file.size > 0 ? (file.size / 1024).toFixed(1) + ' KB' : '-'}</td>
-                                         <td class="filetime">${formatDate(file.lastModified)}</td>
-                                         `;
+                                                     <td class="filename"><a href="${file.url}" class="icon ${file.type}" ${file.type === 'directory' ? 'data-type="dir"' : ''}>${file.name}</a></td>
+                                                     <td class="filesize">${file.size > 0 ? (file.size / 1024).toFixed(1) + ' KB' : '-'}</td>
+                                                     <td class="filetime">${formatDate(file.lastModified)}</td>
+                                                     `;
                 serverFilesTable.appendChild(tr);
             });
 
@@ -1532,22 +1532,22 @@
             if (hasHiddenFiles) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                                         <td colspan="3" style="color:red;text-align:center;">
-                                         注意：此文件夹中包含隐藏文件，某些文件可能未显示。
-                                         </td>
-                                         `;
+                                                     <td colspan="3" style="color:red;text-align:center;">
+                                                     注意：此文件夹中包含隐藏文件，某些文件可能未显示。
+                                                     </td>
+                                                     `;
                 serverFilesTable.appendChild(tr);
             }
         }
 
         // 新的上传区域样式
         const uploadSection = `
-                                         <div style="margin: 20px 0;">
-                                         <button id="uploadButton" class="pure-button pure-button-primary" style="width: 100%;" onclick="document.getElementById('fileInput').click();">
-                                         上传文件
-                                         </button>
-                                         <input type="file" id="fileInput" style="display:none;" multiple />
-                                         </div>
+                                                     <div style="margin: 20px 0;">
+                                                     <button id="uploadButton" class="pure-button pure-button-primary" style="width: 100%;" onclick="document.getElementById('fileInput').click();">
+                                                     上传文件
+                                                     </button>
+                                                     <input type="file" id="fileInput" style="display:none;" multiple />
+                                                     </div>
 `;
 
         // 将上传区域插入到表格上方
@@ -1634,12 +1634,12 @@
 
         // 新的上传区域样式
         const uploadSection = `
-                                         <div style="margin: 20px 0;">
-                                         <input type="file" id="fileInput" style="display:none;" multiple />
-                                         <button id="uploadButton" class="pure-button pure-button-primary" style="width: 100%;" onclick="document.getElementById('fileInput').click();">
-                                         上传文件
-                                         </button>
-                                         </div>
+                                                     <div style="margin: 20px 0;">
+                                                     <input type="file" id="fileInput" style="display:none;" multiple />
+                                                     <button id="uploadButton" class="pure-button pure-button-primary" style="width: 100%;" onclick="document.getElementById('fileInput').click();">
+                                                     上传文件
+                                                     </button>
+                                                     </div>
 `;
 
         // 将上传区域插入到表格上方
@@ -1686,6 +1686,129 @@
                 document.body.removeChild(loading);
             }
         });
+    </script>
+    <style>
+        .upload-progress {
+            width: 100%;
+            background: #eee;
+            border-radius: 4px;
+            margin: 8px0;
+            height: 22px;
+            position: relative;
+        }
+
+        .upload-progress-bar {
+            height: 100%;
+            background: #0078e7;
+            border-radius: 4px;
+            width: 0%;
+            transition: width0.2s;
+        }
+
+        .upload-progress-text {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            text-align: center;
+            line-height: 22px;
+            color: #fff;
+            font-size: 13px;
+        }
+    </style>
+    <script>
+        // 优化上传逻辑
+        function createProgressBar() {
+            const bar = document.createElement('div');
+            bar.className = 'upload-progress';
+            const inner = document.createElement('div');
+            inner.className = 'upload-progress-bar';
+            const text = document.createElement('div');
+            text.className = 'upload-progress-text';
+            text.innerText = '0%';
+            bar.appendChild(inner);
+            bar.appendChild(text);
+            return { bar, inner, text };
+        }
+
+        function setUploadButtonDisabled(disabled) {
+            var btn = document.getElementById('uploadButton');
+            if (btn) {
+                btn.disabled = disabled;
+                if (disabled) {
+                    btn.classList.add('pure-button-disabled');
+                } else {
+                    btn.classList.remove('pure-button-disabled');
+                }
+            }
+        }
+
+        function setupUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadButton = document.getElementById('uploadButton');
+            if (!fileInput || !uploadButton) return;
+
+            fileInput.addEventListener('change', async function (e) {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                setUploadButtonDisabled(true);
+
+                //进度条区域
+                let progressArea = document.getElementById('uploadProgressArea');
+                if (!progressArea) {
+                    progressArea = document.createElement('div');
+                    progressArea.id = 'uploadProgressArea';
+                    uploadButton.parentNode.appendChild(progressArea);
+                }
+                progressArea.innerHTML = '';
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const { bar, inner, text } = createProgressBar();
+                    progressArea.appendChild(bar);
+                    text.innerText = `正在上传: ${file.name}`;
+                    await uploadSingleFile(file, inner, text);
+                }
+                setUploadButtonDisabled(false);
+                fileInput.value = '';
+                alert('文件上传完成');
+                location.reload();
+            });
+        }
+
+        function uploadSingleFile(file, barElem, textElem) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('files[]', file);
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/upload', true);
+                xhr.upload.onprogress = function (e) {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        barElem.style.width = percent + '%';
+                        textElem.innerText = `${file.name} (${percent}%)`;
+                    }
+                };
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        barElem.style.width = '100%';
+                        textElem.innerText = `${file.name} (100%) 上传完成`;
+                        resolve();
+                    } else {
+                        textElem.innerText = `${file.name} 上传失败`;
+                        reject();
+                    }
+                };
+                xhr.onerror = function () {
+                    textElem.innerText = `${file.name} 上传失败`;
+                    reject();
+                };
+                xhr.send(formData);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', setupUpload);
     </script>
 </body>
 </html>
