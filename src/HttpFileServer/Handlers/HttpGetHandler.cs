@@ -56,7 +56,17 @@ namespace HttpFileServer.Handlers
                 return;
             }
 
-            var zipDownload = request.AcceptTypes.Any(p => p.Equals("application/zip", StringComparison.OrdinalIgnoreCase));
+            var zipDownload = false;
+            var downloadQuery = request.QueryString.Get("download");
+            if ("1".Equals(downloadQuery) || "true".Equals(downloadQuery, StringComparison.OrdinalIgnoreCase))
+            {
+                zipDownload = true;
+            }
+            else
+            {
+                zipDownload = request.AcceptTypes.Any(p => p.Equals("application/zip", StringComparison.OrdinalIgnoreCase));
+            }
+
             if (zipDownload)
             {
                 await ProcessZipRequest(context);
