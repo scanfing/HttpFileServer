@@ -51,7 +51,7 @@ JSON响应
 	- 在查询字符串中设置 `download=1` 或 `download=true`，例如：`http://host:port/path?download=1`
 	- 将请求的 Accept 设为 `application/zip`。
 
-- 预览（Preview）：通过在 URL 中加入查询参数 `priview=1`（注意：参数名在代码中为 `priview`）会以原始内容直接返回用于预览，而不触发下载或 ZIP 行为。例如：`http://host:port/path/file.png?priview=1`。
+- 预览（Preview）：通过在 URL 中加入查询参数 `preview=1` 会以原始内容直接返回用于预览，而不触发下载或 ZIP 行为。例如：`http://host:port/path/file.png?preview=1`。
 
 - 断点续传（Range）：支持 HTTP Range 请求头以实现断点续传与分片下载。
 
