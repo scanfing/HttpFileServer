@@ -45,28 +45,6 @@ namespace HttpFileServer.Handlers
 
         #region Methods
 
-        private static string GetMimeType(string filePath)
-        {
-            var ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
-            switch (ext)
-            {
-                case ".txt": return "text/plain";
-                case ".md": return "text/markdown";
-                case ".log": return "text/plain";
-                case ".csv": return "text/csv";
-                case ".json": return "application/json";
-                case ".xml": return "application/xml";
-                case ".jpg": case ".jpeg": return "image/jpeg";
-                case ".png": return "image/png";
-                case ".gif": return "image/gif";
-                case ".bmp": return "image/bmp";
-                case ".webp": return "image/webp";
-                case ".pdf": return "application/pdf";
-                case ".html": case ".htm": return "text/html";
-                default: return "application/octet-stream";
-            }
-        }
-
         public override async Task ProcessRequest(HttpListenerContext context)
         {
             var request = context.Request;
@@ -121,7 +99,7 @@ namespace HttpFileServer.Handlers
             {
                 response.AppendHeader("Cache-Control", "no-cache");
                 response.AppendHeader("Etag", cacheTag);
-                if (request.Headers.AllKeys.Count(p => p.ToLower() == "range") >0)
+                if (request.Headers.AllKeys.Count(p => p.ToLower() == "range") > 0)
                     await ResponseContentPartial(dstpath2, request, response);
                 else
                     await ResponseContentFull(dstpath2, request, response);
@@ -157,7 +135,7 @@ namespace HttpFileServer.Handlers
                         location = Path.GetFileName(SourceDir) + "\\" + path.Replace(SourceDir, "").Trim('\\');
                         title = Path.GetFileName(path.TrimEnd('\\')) + " -- HttpFileServer";
                     }
-                    var content = HtmlExtension.GenerateHtmlContentForDir(path, path != SourceDir, EnableUpload, location, title);
+                    var content = HtmlExtension.GenerateHtmlContentForDir(SourceDir, path, path != SourceDir, EnableUpload, location, title);
                     data = Encoding.UTF8.GetBytes(content);
                     _cacheSrv.SaveCache(path, data);
                     stream = new MemoryStream(data);
@@ -382,7 +360,7 @@ namespace HttpFileServer.Handlers
                 System.Diagnostics.Trace.TraceError($"Range parse error: {rangeStr}, Exception: {ex}");
                 return;
             }
-            if (range.Item1 <0)
+            if (range.Item1 < 0)
             {
                 response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
                 System.Diagnostics.Trace.TraceWarning($"Range start <0: {rangeStr}");
@@ -405,20 +383,20 @@ namespace HttpFileServer.Handlers
             }
             response.AddHeader("Content-Range", $"bytes {range.Item1}-{range.Item2}/{stream.Length}");
             var buff = new byte[81920];
-            var rangeEnd = range.Item2 > range.Item1 ? range.Item2 : stream.Length -1;
-            var bytesNeeds = rangeEnd - range.Item1 +1;
+            var rangeEnd = range.Item2 > range.Item1 ? range.Item2 : stream.Length - 1;
+            var bytesNeeds = rangeEnd - range.Item1 + 1;
             response.StatusCode = (int)HttpStatusCode.PartialContent;
             try
             {
                 if (onlyHead)
                     return;
                 stream.Seek(range.Item1, SeekOrigin.Begin);
-                while (response.OutputStream.CanWrite && bytesNeeds >0)
+                while (response.OutputStream.CanWrite && bytesNeeds > 0)
                 {
-                    var readcount = await stream.ReadAsync(buff,0, (int)Math.Min(buff.Length, bytesNeeds));
-                    if (readcount <=0)
+                    var readcount = await stream.ReadAsync(buff, 0, (int)Math.Min(buff.Length, bytesNeeds));
+                    if (readcount <= 0)
                         break;
-                    await response.OutputStream.WriteAsync(buff,0, readcount);
+                    await response.OutputStream.WriteAsync(buff, 0, readcount);
                     bytesNeeds -= readcount;
                     await Task.Delay(1);
                 }
@@ -437,6 +415,28 @@ namespace HttpFileServer.Handlers
                     FileAccessHelper.SubAccessCount(path);
                 }
                 stream.Close();
+            }
+        }
+
+        private static string GetMimeType(string filePath)
+        {
+            var ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
+            switch (ext)
+            {
+                case ".txt": return "text/plain";
+                case ".md": return "text/markdown";
+                case ".log": return "text/plain";
+                case ".csv": return "text/csv";
+                case ".json": return "application/json";
+                case ".xml": return "application/xml";
+                case ".jpg": case ".jpeg": return "image/jpeg";
+                case ".png": return "image/png";
+                case ".gif": return "image/gif";
+                case ".bmp": return "image/bmp";
+                case ".webp": return "image/webp";
+                case ".pdf": return "application/pdf";
+                case ".html": case ".htm": return "text/html";
+                default: return "application/octet-stream";
             }
         }
 
