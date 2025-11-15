@@ -914,6 +914,84 @@
         .pure-table-horizontal tbody > tr:last-child > td {
             border-bottom-width: 0
         }
+
+        /* 优化表格布局和自适应宽度 */
+        .pure-table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        th, td {
+            padding: 0.5em0.5em;
+            margin: 0;
+            border-bottom: 1px #aaa5 solid;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+            th:nth-child(1), td.filename {
+                width: 60%;
+            }
+
+            th:nth-child(2), td.filesize {
+                width: 18%;
+                min-width: 70px;
+            }
+
+            th:nth-child(3), td.filetime {
+                width: 22%;
+                min-width: 90px;
+            }
+
+        @media (max-width:600px) {
+            th, td {
+                font-size: 12px;
+                padding: 0.3em0.2em;
+            }
+
+                th:nth-child(1), td.filename {
+                    width: 55%;
+                }
+
+                th:nth-child(2), td.filesize {
+                    width: 22%;
+                    min-width: 50px;
+                }
+
+                th:nth-child(3), td.filetime {
+                    width: 23%;
+                    min-width: 60px;
+                }
+        }
+
+        /* 移除多余留白 */
+        td {
+            margin: 0;
+        }
+
+            /* 文件名列允许自动换行 */
+            th:nth-child(1), td.filename {
+                width: 60%;
+                white-space: normal;
+                word-break: break-all;
+            }
+
+        @media (max-width:600px) {
+            th:nth-child(1), td.filename {
+                width: 55%;
+                white-space: normal;
+                word-break: break-all;
+            }
+        }
+        /* 保证 a.icon也能换行 */
+        td.filename, td.filename a.icon {
+            white-space: normal !important;
+            word-break: break-all !important;
+            word-wrap: break-word !important;
+            display: block !important;
+            max-width: 100% !important;
+        }
     </style>
     <style>
 
@@ -1121,20 +1199,32 @@
             border-radius: 3px;
             cursor: pointer;
         }
+
+        /*允许面包屑导航换行 */
+        .header {
+            white-space: normal;
+            word-break: break-all;
+        }
+            /* 如果面包屑是 h1 或其他元素，也允许换行 */
+            .header h1, .header .breadcrumb {
+                white-space: normal;
+                word-break: break-all;
+                display: block;
+            }
     </style>
     <style>
-.preview-float {
- position: fixed;
- z-index:9999;
- background: #fff;
- border:1px solid #ccc;
- box-shadow:02px8px #888;
- max-width:600px;
- max-height:400px;
- overflow: auto;
- padding:8px;
- }
-</style>
+        .preview-float {
+            position: fixed;
+            z-index: 9999;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 02px8px #888;
+            max-width: 600px;
+            max-height: 400px;
+            overflow: auto;
+            padding: 8px;
+        }
+    </style>
     <title id="title">{{title}}</title>
 </head>
 
@@ -1249,352 +1339,353 @@
         // 右键菜单
 
         let previewTimer = null;
-let previewFloat = null;
+        let previewFloat = null;
 
-document.getElementById('serverFiles').addEventListener('mouseover', function(e) {
- if (e.target.className === 'icon file' && /\.(txt|md|log|csv|json|xml|jpg|jpeg|png|gif|bmp|webp|pdf|html|htm)$/i.test(e.target.href)) {
- previewTimer = setTimeout(() => {
- showPreviewFloat(e.target);
- },1000);
- }
-});
-document.getElementById('serverFiles').addEventListener('mouseout', function(e) {
- if (previewTimer) {
- clearTimeout(previewTimer);
- previewTimer = null;
- }
- if (previewFloat) {
- document.body.removeChild(previewFloat);
- previewFloat = null;
- }
-});
+        document.getElementById('serverFiles').addEventListener('mouseover', function (e) {
+            if (e.target.className === 'icon file' && /\.(txt|md|log|csv|json|xml|jpg|jpeg|png|gif|bmp|webp|pdf|html|htm)$/i.test(e.target.href)) {
+                previewTimer = setTimeout(() => {
+                    showPreviewFloat(e.target);
+                }, 1000);
+            }
+        });
+        document.getElementById('serverFiles').addEventListener('mouseout', function (e) {
+            if (previewTimer) {
+                clearTimeout(previewTimer);
+                previewTimer = null;
+            }
+            if (previewFloat) {
+                document.body.removeChild(previewFloat);
+                previewFloat = null;
+            }
+        });
 
-function showPreviewFloat(target) {
- const filePath = target.href;
- // const fileName = filePath.split('/').pop();
- const fileName = decodeURIComponent(filePath.split('/').pop());
- const fileExtension = fileName.split('.').pop().toLowerCase();
- let previewContent = '';
+        function showPreviewFloat(target) {
+            const filePath = target.href;
+            // const fileName = filePath.split('/').pop();
+            const fileName = decodeURIComponent(filePath.split('/').pop());
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            let previewContent = '';
 
- // 根据文件类型生成不同的预览内容
- if (/\.(jpg|jpeg|png|gif|bmp|webp)$/.test(filePath)) {
- previewContent = `<img src="${filePath}" style="max-width:100%;max-height:300px;" />`;
- } else if (/\.(txt|md|log|csv|json|xml)$/.test(filePath)) {
- previewContent = `<iframe src="${filePath}" style="width:100%;height:300px;"></iframe>`;
- } else {
- previewContent = '无法预览此文件类型';
- }
+            // 根据文件类型生成不同的预览内容
+            if (/\.(jpg|jpeg|png|gif|bmp|webp)$/.test(filePath)) {
+                previewContent = `<img src="${filePath}" style="max-width:100%;max-height:300px;" />`;
+            } else if (/\.(txt|md|log|csv|json|xml)$/.test(filePath)) {
+                previewContent = `<iframe src="${filePath}" style="width:100%;height:300px;"></iframe>`;
+            } else {
+                previewContent = '无法预览此文件类型';
+            }
 
- if (!previewFloat) {
- previewFloat = document.createElement('div');
- previewFloat.className = 'preview-float';
- document.body.appendChild(previewFloat);
- }
+            if (!previewFloat) {
+                previewFloat = document.createElement('div');
+                previewFloat.className = 'preview-float';
+                document.body.appendChild(previewFloat);
+            }
 
- previewFloat.innerHTML = `
- <div style="font-weight:bold;">${fileName}</div>
- <div style="margin-top:4px;">${previewContent}</div>
- `;
+            previewFloat.innerHTML = `
+                                         <div style="font-weight:bold;">${fileName}</div>
+                                         <div style="margin-top:4px;">${previewContent}</div>
+                                         `;
 
- const rect = target.getBoundingClientRect();
- let top = rect.top + window.scrollY - previewFloat.offsetHeight - 8;
- let left = rect.left + window.scrollX;
+            const rect = target.getBoundingClientRect();
+            let top = rect.top + window.scrollY - previewFloat.offsetHeight - 8;
+            let left = rect.left + window.scrollX;
 
- // Adjust position if it overflows the viewport
- if (top < window.scrollY) {
- top = rect.bottom + window.scrollY + 8;
- }
+            // Adjust position if it overflows the viewport
+            if (top < window.scrollY) {
+                top = rect.bottom + window.scrollY + 8;
+            }
 
- if (left + previewFloat.offsetWidth > window.innerWidth) {
- left = window.innerWidth - previewFloat.offsetWidth - 8;
- }
+            if (left + previewFloat.offsetWidth > window.innerWidth) {
+                left = window.innerWidth - previewFloat.offsetWidth - 8;
+            }
 
- previewFloat.style.top = `${top}px`;
- previewFloat.style.left = `${left}px`;
- previewFloat.style.display = 'block';
-}
+            previewFloat.style.top = `${top}px`;
+            previewFloat.style.left = `${left}px`;
+            previewFloat.style.display = 'block';
+        }
 
-document.addEventListener('mousemove', (e) => {
- if (previewFloat) {
- const x = e.clientX;
- const y = e.clientY;
+        document.addEventListener('mousemove', (e) => {
+            if (previewFloat) {
+                const x = e.clientX;
+                const y = e.clientY;
 
- const windowWidth = window.innerWidth;
- const windowHeight = window.innerHeight;
- const previewWidth = previewFloat.offsetWidth;
- const previewHeight = previewFloat.offsetHeight;
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                const previewWidth = previewFloat.offsetWidth;
+                const previewHeight = previewFloat.offsetHeight;
 
- let newX = x;
- let newY = y;
+                let newX = x;
+                let newY = y;
 
- // 如果右侧溢出，则调整到左侧
- if (x + previewWidth > windowWidth) {
- newX = x - previewWidth;
- }
+                // 如果右侧溢出，则调整到左侧
+                if (x + previewWidth > windowWidth) {
+                    newX = x - previewWidth;
+                }
 
- // 如果底部溢出，则调整到顶部
- if (y + previewHeight > windowHeight) {
- newY = y - previewHeight;
- }
+                // 如果底部溢出，则调整到顶部
+                if (y + previewHeight > windowHeight) {
+                    newY = y - previewHeight;
+                }
 
- previewFloat.style.left = `${newX}px`;
- previewFloat.style.top = `${newY}px`;
- }
-});
+                previewFloat.style.left = `${newX}px`;
+                previewFloat.style.top = `${newY}px`;
+            }
+        });
 
-document.getElementById('serverFiles').addEventListener('mouseleave', function(e) {
- if (previewFloat) {
- document.body.removeChild(previewFloat);
- previewFloat = null;
- }
-});
+        document.getElementById('serverFiles').addEventListener('mouseleave', function (e) {
+            if (previewFloat) {
+                document.body.removeChild(previewFloat);
+                previewFloat = null;
+            }
+        });
 
-function traverseFileSystem(dir) {
- const result = [];
- const entries = dir.entries();
- let hasHiddenFiles = false;
+        function traverseFileSystem(dir) {
+            const result = [];
+            const entries = dir.entries();
+            let hasHiddenFiles = false;
 
- for (const entry of entries) {
- const isHidden = entry.name.startsWith('.');
- if (isHidden) {
- hasHiddenFiles = true;
- }
+            for (const entry of entries) {
+                const isHidden = entry.name.startsWith('.');
+                if (isHidden) {
+                    hasHiddenFiles = true;
+                }
 
- if (entry.isFile) {
- result.push({
- name: entry.name,
- size: entry.size,
- type: 'file',
- lastModified: entry.lastModified,
- url: entry.url,
- });
- } else if (entry.isDirectory) {
- result.push({
- name: entry.name,
- size: 0,
- type: 'directory',
- lastModified: entry.lastModified,
- url: entry.url,
- });
- }
- }
+                if (entry.isFile) {
+                    result.push({
+                        name: entry.name,
+                        size: entry.size,
+                        type: 'file',
+                        lastModified: entry.lastModified,
+                        url: entry.url,
+                    });
+                } else if (entry.isDirectory) {
+                    result.push({
+                        name: entry.name,
+                        size: 0,
+                        type: 'directory',
+                        lastModified: entry.lastModified,
+                        url: entry.url,
+                    });
+                }
+            }
 
- // 按照文件名排序
- result.sort((a, b) => a.name.localeCompare(b.name));
+            // 按照文件名排序
+            result.sort((a, b) => a.name.localeCompare(b.name));
 
- return { result, hasHiddenFiles };
-}
+            return { result, hasHiddenFiles };
+        }
 
-function displayFiles(files) {
- const serverFilesTable = document.getElementById('serverFiles');
- serverFilesTable.innerHTML = '';
+        function displayFiles(files) {
+            const serverFilesTable = document.getElementById('serverFiles');
+            serverFilesTable.innerHTML = '';
 
- if (files.length === 0) {
- serverFilesTable.innerHTML = '<tr><td colspan="3" style="text-align:center;">没有文件</td></tr>';
- return;
- }
+            if (files.length === 0) {
+                serverFilesTable.innerHTML = '<tr><td colspan="3" style="text-align:center;">没有文件</td></tr>';
+                return;
+            }
 
- files.forEach((file) => {
- const tr = document.createElement('tr');
- tr.innerHTML = `
- <td class="filename"><a href="${file.url}" class="icon ${file.type}" ${file.type === 'directory' ? 'data-type="dir"' : ''}>${file.name}</a></td>
- <td class="filesize">${file.size > 0 ? (file.size / 1024).toFixed(1) + ' KB' : '-'}</td>
- <td class="filetime">${formatDate(file.lastModified)}</td>
- `;
- serverFilesTable.appendChild(tr);
- });
-}
+            files.forEach((file) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                                         <td class="filename"><a href="${file.url}" class="icon ${file.type}" ${file.type === 'directory' ? 'data-type="dir"' : ''}>${file.name}</a></td>
+                                         <td class="filesize">${file.size > 0 ? (file.size / 1024).toFixed(1) + ' KB' : '-'}</td>
+                                         <td class="filetime">${formatDate(file.lastModified)}</td>
+                                         `;
+                serverFilesTable.appendChild(tr);
+            });
+        }
 
-function formatDate(timestamp) {
- if (!timestamp) return '-';
- const date = new Date(timestamp);
- return date.toLocaleString('zh-CN', {
- year: 'numeric',
- month: '2-digit',
- day: '2-digit',
- hour: '2-digit',
- minute: '2-digit',
- second: '2-digit',
- });
-}
+        function formatDate(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+            });
+        }
 
-function updateTableRows(result) {
- const { result: files, hasHiddenFiles } = result;
- const serverFilesTable = document.getElementById('serverFiles');
- serverFilesTable.innerHTML = '';
+        function updateTableRows(result) {
+            const { result: files, hasHiddenFiles } = result;
+            const serverFilesTable = document.getElementById('serverFiles');
+            serverFilesTable.innerHTML = '';
 
- if (files.length === 0) {
- serverFilesTable.innerHTML = '<tr><td colspan="3" style="text-align:center;">没有文件</td></tr>';
- return;
- }
+            if (files.length === 0) {
+                serverFilesTable.innerHTML = '<tr><td colspan="3" style="text-align:center;">没有文件</td></tr>';
+                return;
+            }
 
- files.forEach((file) => {
- const tr = document.createElement('tr');
- tr.innerHTML = `
- <td class="filename"><a href="${file.url}" class="icon ${file.type}" ${file.type === 'directory' ? 'data-type="dir"' : ''}>${file.name}</a></td>
- <td class="filesize">${file.size > 0 ? (file.size / 1024).toFixed(1) + ' KB' : '-'}</td>
- <td class="filetime">${formatDate(file.lastModified)}</td>
- `;
- serverFilesTable.appendChild(tr);
- });
+            files.forEach((file) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                                         <td class="filename"><a href="${file.url}" class="icon ${file.type}" ${file.type === 'directory' ? 'data-type="dir"' : ''}>${file.name}</a></td>
+                                         <td class="filesize">${file.size > 0 ? (file.size / 1024).toFixed(1) + ' KB' : '-'}</td>
+                                         <td class="filetime">${formatDate(file.lastModified)}</td>
+                                         `;
+                serverFilesTable.appendChild(tr);
+            });
 
- // 如果存在隐藏文件，则显示提示
- if (hasHiddenFiles) {
- const tr = document.createElement('tr');
- tr.innerHTML = `
- <td colspan="3" style="color:red;text-align:center;">
- 注意：此文件夹中包含隐藏文件，某些文件可能未显示。
- </td>
- `;
- serverFilesTable.appendChild(tr);
- }
-}
+            // 如果存在隐藏文件，则显示提示
+            if (hasHiddenFiles) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                                         <td colspan="3" style="color:red;text-align:center;">
+                                         注意：此文件夹中包含隐藏文件，某些文件可能未显示。
+                                         </td>
+                                         `;
+                serverFilesTable.appendChild(tr);
+            }
+        }
 
-// 新的上传区域样式
-const uploadSection = `
- <div style="margin: 20px 0;">
- <button id="uploadButton" class="pure-button pure-button-primary" style="width: 100%;" onclick="document.getElementById('fileInput').click();">
- 上传文件
- </button>
- <input type="file" id="fileInput" style="display:none;" multiple />
- </div>
+        // 新的上传区域样式
+        const uploadSection = `
+                                         <div style="margin: 20px 0;">
+                                         <button id="uploadButton" class="pure-button pure-button-primary" style="width: 100%;" onclick="document.getElementById('fileInput').click();">
+                                         上传文件
+                                         </button>
+                                         <input type="file" id="fileInput" style="display:none;" multiple />
+                                         </div>
 `;
 
-// 将上传区域插入到表格上方
-document.addEventListener('DOMContentLoaded', () => {
- const mainSection = document.querySelector('.main');
- const uploadDiv = document.createElement('div');
- uploadDiv.innerHTML = uploadSection;
- mainSection.insertBefore(uploadDiv, mainSection.firstChild);
-});
+        // 将上传区域插入到表格上方
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainSection = document.querySelector('.main');
+            const uploadDiv = document.createElement('div');
+            uploadDiv.innerHTML = uploadSection;
+            mainSection.insertBefore(uploadDiv, mainSection.firstChild);
+        });
 
-// 处理文件上传
-document.getElementById('fileInput').addEventListener('change', async (e) => {
- const files = Array.from(e.target.files);
- if (files.length === 0) return;
+        // 处理文件上传
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
 
- // 显示加载提示
- const loadingIndicator = document.createElement('div');
- loadingIndicator.className = 'loading-indicator';
- loadingIndicator.innerText = 'Uploading files, please wait...';
- document.body.appendChild(loadingIndicator);
+            // 显示加载提示
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'loading-indicator';
+            loadingIndicator.innerText = 'Uploading files, please wait...';
+            document.body.appendChild(loadingIndicator);
 
- try {
- await uploadFiles(files);
- } catch (error) {
- console.error('Error uploading files:', error);
- alert('文件上传失败');
- } finally {
- document.body.removeChild(loadingIndicator);
- }
-});
+            try {
+                await uploadFiles(files);
+            } catch (error) {
+                console.error('Error uploading files:', error);
+                alert('文件上传失败');
+            } finally {
+                document.body.removeChild(loadingIndicator);
+            }
+        });
 
-async function uploadFiles(files) {
- const zip = new JSZip();
- const folder = zip.folder('uploads');
+        async function uploadFiles(files) {
+            const zip = new JSZip();
+            const folder = zip.folder('uploads');
 
- files.forEach((file) => {
- folder.file(file.name, file);
- });
+            files.forEach((file) => {
+                folder.file(file.name, file);
+            });
 
- const content = await zip.generateAsync({ type: 'blob' });
+            const content = await zip.generateAsync({ type: 'blob' });
 
- const formData = new FormData();
- formData.append('file', content, 'uploads.zip');
+            const formData = new FormData();
+            formData.append('file', content, 'uploads.zip');
 
- await fetch('/upload', {
- method: 'POST',
- body: formData,
- });
-}
+            await fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            });
+        }
 
-function getCookie(name) {
- let cookieArr = document.cookie.split(";");
- for (let i = 0; i < cookieArr.length; i++) {
- let cookiePair = cookieArr[i].split("=");
- if (decodeURIComponent(cookiePair[0].trim()) === name) {
- return decodeURIComponent(cookiePair[1]);
- }
- }
- return null;
-}
+        function getCookie(name) {
+            let cookieArr = document.cookie.split(";");
 
-const token = getCookie("token");
-if (token) {
- fetchFileSystemData();
-} else {
- document.getElementById('serverFiles').innerHTML = '<tr><td colspan="3" style="text-align:center;">未登录，无法访问文件系统</td></tr>';
-}
+            for (let i = 0; i < cookieArr.length; i++) {
+                let cookiePair = cookieArr[i].split("=");
+                if (decodeURIComponent(cookiePair[0].trim()) === name) {
+                    return decodeURIComponent(cookiePair[1]);
+                }
+            }
+            return null;
+        }
 
-async function fetchFileSystemData(path = '') {
- const response = await fetch(`/api/files?path=${encodeURIComponent(path)}`, {
- headers: {
- 'Authorization': `Bearer ${token}`,
- },
- });
+        const token = getCookie("token");
+        if (token) {
+            fetchFileSystemData();
+        } else {
+            document.getElementById('serverFiles').innerHTML = '<tr><td colspan="3" style="text-align:center;">未登录，无法访问文件系统</td></tr>';
+        }
 
- if (!response.ok) {
- throw new Error('Network response was not ok');
- }
+        async function fetchFileSystemData(path = '') {
+            const response = await fetch(`/api/files?path=${encodeURIComponent(path)}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
 
- const data = await response.json();
- updateTableRows(data);
-}
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
 
-// 新的上传区域样式
-const uploadSection = `
- <div style="margin: 20px 0;">
- <input type="file" id="fileInput" style="display:none;" multiple />
- <button id="uploadButton" class="pure-button pure-button-primary" style="width: 100%;" onclick="document.getElementById('fileInput').click();">
- 上传文件
- </button>
- </div>
+            const data = await response.json();
+            updateTableRows(data);
+        }
+
+        // 新的上传区域样式
+        const uploadSection = `
+                                         <div style="margin: 20px 0;">
+                                         <input type="file" id="fileInput" style="display:none;" multiple />
+                                         <button id="uploadButton" class="pure-button pure-button-primary" style="width: 100%;" onclick="document.getElementById('fileInput').click();">
+                                         上传文件
+                                         </button>
+                                         </div>
 `;
 
-// 将上传区域插入到表格上方
-document.addEventListener('DOMContentLoaded', () => {
- const mainSection = document.querySelector('.main');
- const uploadDiv = document.createElement('div');
- uploadDiv.innerHTML = uploadSection;
- mainSection.insertBefore(uploadDiv, mainSection.firstChild);
-});
+        // 将上传区域插入到表格上方
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainSection = document.querySelector('.main');
+            const uploadDiv = document.createElement('div');
+            uploadDiv.innerHTML = uploadSection;
+            mainSection.insertBefore(uploadDiv, mainSection.firstChild);
+        });
 
-document.getElementById('fileInput').addEventListener('change', async function (e) {
- const files = e.target.files;
- if (files.length === 0) return;
+        document.getElementById('fileInput').addEventListener('change', async function (e) {
+            const files = e.target.files;
+            if (files.length === 0) return;
 
- // 显示加载提示
- const loading = document.createElement('div');
- loading.className = 'loading';
- loading.innerText = '文件上传中，请稍候...';
- document.body.appendChild(loading);
+            // 显示加载提示
+            const loading = document.createElement('div');
+            loading.className = 'loading';
+            loading.innerText = '文件上传中，请稍候...';
+            document.body.appendChild(loading);
 
- try {
- await new Promise((resolve, reject) => {
- setTimeout(resolve, 2000); // Simulate a delay
- });
- const formData = new FormData();
- for (const file of files) {
- formData.append('files[]', file);
- }
+            try {
+                await new Promise((resolve, reject) => {
+                    setTimeout(resolve, 2000); // Simulate a delay
+                });
+                const formData = new FormData();
+                for (const file of files) {
+                    formData.append('files[]', file);
+                }
 
- const response = await fetch('/upload', {
- method: 'POST',
- body: formData,
- });
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
 
- if (!response.ok) {
- throw new Error('网络错误，无法上传文件');
- }
+                if (!response.ok) {
+                    throw new Error('网络错误，无法上传文件');
+                }
 
- alert('文件上传成功');
- location.reload();
- } catch (error) {
- alert(error.message);
- } finally {
- document.body.removeChild(loading);
- }
-});
+                alert('文件上传成功');
+                location.reload();
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                document.body.removeChild(loading);
+            }
+        });
     </script>
 </body>
 </html>

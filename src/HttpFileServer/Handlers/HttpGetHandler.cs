@@ -50,6 +50,16 @@ namespace HttpFileServer.Handlers
             var request = context.Request;
             var response = context.Response;
             var url = request.Url.ToString();
+            var localPath = request.Url.LocalPath;
+
+            // 增加特殊路径和空路径过滤，防止异常
+            if (string.IsNullOrWhiteSpace(localPath))
+            {
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                response.Close();
+                return;
+            }
+
             var isPreview = url.Contains("priview=1");
 
             var useJson = request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
