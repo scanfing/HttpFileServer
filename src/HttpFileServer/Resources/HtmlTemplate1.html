@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件管理系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .table-container {
+      overflow-y: auto;
+    }
+
+    .table-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .drag-over {
+      background-color: #f3f4f6;
+      border-color: #3b82f6;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .file {
+      background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAABnRSTlMAAAAAAABupgeRAAABHUlEQVR42o2RMW7DIBiF3498iHRJD5JKHurL+CRVBp+i2T16tTynF2gO0KSb5ZrBBl4HHDBuK/WXACH4eO9/CAAAbdvijzLGNE1TVZXfZuHg6XCAQESAZXbOKaXO57eiKG6ft9PrKQIkCQqFoIiQFBGlFIB5nvM8t9aOX2Nd18oDzjnPgCDpn/BH4zh2XZdlWVmWiUK4IgCBoFMUz9eP6zRN75cLgEQhcmTQIbl72O0f9865qLAAsURAAgKBJKEtgLXWvyjLuFsThCSstb8rBCaAQhDYWgIZ7myM+TUBjDHrHlZcbMYYk34cN0YSLcgS+wL0fe9TXDMbY33fR2AYBvyQ8L0Gk8MwREBrTfKe4TpTzwhArXWi8HI84h/1DfwI5mhxJamFAAAAAElFTkSuQmCC ") left top no-repeat;
+    }
+
+    .dir {
+      background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYUR5ccllPAAAAd5JREFUeNqMU79rFUEQ/vbuodFEEkzAImBpkUabFP4ldpaJhZXYm/RiZWsv/hkWFglBUyTIgyAIIfgIRjHv3r39MePM7N3LcbxAFvZ2b2bn22/mm3XMjF+HL3YW7q28YSIw8mBKoBihhhgCsoORot9d3/ywg3YowMXwNde/PzGnk2vn6PitrT+/PGeNaecg4+qNY3D43vy16A5wDDd4Aqg/ngmrjl/GoN0U5V1QquHQG3q+TPDVhVwyBffcmQGJmSVfyZk7R3SngI4JKfwDJ2+05zIg8gbiereTZRHhJ5KCMOwDFLjhoBTn2g0ghagfKeIYJDPFyibJVBtTREwq60SpYvh5++PpwatHsxSm9QRLSQpEVSd7/TYJUb49TX7gztpjjEffnoVw66+Ytovs14Yp7HaKmUXeX9rKUoMoLNW3srqI5fWn8JejrVkK0QcrkFLOgS39yoKUQe292WJ1guUHG8K2o8K00oO1BTvXoW4yasclUTgZYJY9aFNfAThX5CZRmczAV52oAPoupHhWRIUUAOoyUIlYVaAa/VbLbyiZUiyFbjQFNwiZQSGl4IDy9sO5Wrty0QLKhdZPxmgGcDo8ejn+c/6eiK9poz15Kw7Dr/vN/z6W7q++091/AQYA5mZ8GYJ9K0AAAAAASUVORK5CYII= ") left top no-repeat;
+    }
+
+    .up {
+      background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYUR5ccllPAAAAmlJREFUeNpsU0toU0EUPfPysx/tTxuDH9SCWhUDooIbd7oRUUTMouqi2iIoCO6lceHWhegy4EJFinWjrlQUpVm0IIoFpVDEIthm0dpikpf3ZuZ6Z94nrXhhMjM3c8895977BBHB2PznK8WPtDgyWH5q77cPH8PpdXuhpQT4ifR9u5sfJb1bmw6VivahATDrxcRZ2njfoaMv+2j7mLDn93MPiNRMvGbL18L9IpF8h9/TN+EYkMffSiOXJ5+hkD+PdqcLpICWHOHc2CC+LEyA/K+cKQMnlQHJX8wqYG3MAJy88Wa4OLDvEqAEOpJd0LxHIMdHBziowSwVlF8D6QaicK01krw/JynwcKoEwZczewroTvZirlKJs5CqQ5CG8pb57FnJUA0LYCXMX5fibd+p8LWDDemcPZbzQyjvH+Ki1TlIciElA7ghwLKV4kRZstt2sANWRjYTAGzuP2hXZFpJ/GsxgGJ0ox1aoFWsDXyyxqCs26+ydmagFN/rRjymJ1898bzGzmQE0HCZpmk5A0RFIv8Pn0WYPsiu6t/Rsj6PauVTwffTSzGAGZhUG2F06hEc9ibS7OPMNp6ErYFlKavo7MkhmTqCxZ/jwzGA9Hx82H2BZSw1NTN9Gx8ycHkajU/7M+jInsDC7DiaEmo1bNl1AMr9ASFgqVu9MCTIzoGUimXVAnnaN0PdBBDCCYbEtMk6wkpQwIG0sn0PQIUF4GsTwLSIFKNqF6DVrQq+IWVrQDxAYQC/1SsYOI4pOxKZrfifiUSbDUisif7XlpGIPufXd/uvdvZm760M0no1FZcnrzUdjw7au3vu/BVgAFLXeuTxhTXVAAAAAElFTkSuQmCC ") left top no-repeat;
+    }
+  </style>
+  <title id="title">{{title}}</title>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+  <!-- 头部导航 -->
+  <header class="h-16 bg-white shadow-sm border-b">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <h1 class="text-xl font-semibold text-gray-900">{{header}}</h1>
+        </div>
+      </div>
+  </header>
+
+  <div class="h-[calc(100vh-128px)] w-full px-4 sm:px-6 lg:px-8 py-8">
+    <!-- 文件操作区域 -->
+    <div class="h-full bg-white rounded-lg shadow-sm border box-border">
+      <!-- 视图切换区域 -->
+      <div id="fileContainer" class="h-full p-6 relative flex flex-col">
+        <!-- 表格视图 -->
+        <div id="tableViewContent" class="table-container flex-auto h-full mb-4">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="table-header bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名称</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">大小</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">修改日期</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <a class="flex items-center cursor-pointer" target="_self">
+                    <i class="icon up mr-1"></i>
+                    <span class="text-sm text-gray-900 text-ellipsis">[上一级]</span>
+                  </a>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                </td>
+              </tr>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <i class="icon dir mr-1"></i>
+                    <span class="text-sm text-gray-900 text-ellipsis">${file.name}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${file.size}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${file.modified}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${this.getFileTypeText(file.type)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button class="text-blue-400 hover:text-blue-900 mr-3">
+                    <a href="" target="_blank">打包下载</a>
+                  </button>
+                </td>
+              </tr>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <i class="icon file mr-1"></i>
+                    <span class="text-sm text-gray-900 text-ellipsis">${file.name}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${file.size}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${file.modified}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${this.getFileTypeText(file.type)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button class="text-blue-400 hover:text-blue-900 mr-3">
+                    <a href="" target="_blank">下载</a>
+                  </button>
+                  <button class="text-blue-400 hover:text-blue-900 mr-3" data-filename="main.png" onclick="previewFile(event)">
+                    预览
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 概览信息 -->
+        <div class="flex-none">
+          <span class="text-sm text-gray-600">总计: 24 个项目</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 底部导航 -->
+  <footer class="flex justify-center pb-8">
+    <div class="flex items-center space-x-2 text-gray-400">{{footer}}</div>
+  </footer>
+
+  <!-- 预览模态框 -->
+  <div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-[50%] w-full mx-4 transform transition-all">
+      <div class="px-6 py-4 border-b">
+        <h3 class="text-lg font-semibold text-gray-900">文件预览</h3>
+      </div>
+      <div class="p-6">
+        <div class="mb-6 flex justify-center">
+          <!-- 预览内容将通过JavaScript动态生成 -->
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button id="closePreview" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors" onclick="closePreview()">
+            关闭
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 拖拽上传模态框 -->
+  <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-[50%] w-full mx-4 transform transition-all">
+      <div class="px-6 py-4 border-b">
+        <h3 class="text-lg font-semibold text-gray-900">上传文件</h3>
+      </div>
+      <div class="p-6">
+        <div class="mb-6">
+          <!-- 文件信息将通过JavaScript动态生成 -->
+          <table class="w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名称</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">大小</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">修改日期</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">上传状态</th>
+              </tr>
+            </thead>
+            <tbody id="fileInfo" class="bg-white divide-y divide-gray-200">
+              <!-- 表格数据将通过JavaScript动态生成 -->
+            </tbody>
+          </table>
+          <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+            <p id="overview" class="text-center text-sm text-blue-700"></p>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button id="confirm" class="hidden px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="cancel()">
+            确定
+          </button>
+          <button id="cancel" class="hidden px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" onclick="cancel()">
+            取消
+          </button>
+          <button id="uploader" class="hidden px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="sendFiles()">
+            上传
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <script src="./queue.js"></script>
+    <script src="./uploadManage.js"></script>
+    <script src="./script.js"></script>
+</body>
+
+</html>
