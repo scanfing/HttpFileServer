@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 using HttpFileServer.Core;
 using HttpFileServer.Infrastructure;
@@ -26,6 +28,7 @@ namespace HttpFileServer.ViewModels
         private string _logContent = string.Empty;
         private string _sourceDir;
         private ServerStatus _status = ServerStatus.Ready;
+        private string _themeMode = "Light"; // Light / Dark / System
 
         #endregion Fields
 
@@ -39,8 +42,13 @@ namespace HttpFileServer.ViewModels
 
             CommandStartServer = new CommandImpl(OnRequestStartServer, CanStartServer);
             CommandStopServer = new CommandImpl(OnRequestStopServer, CanStopServer);
+            CommandToggleTheme = new CommandImpl(OnToggleTheme);
 
             _cfgSrv = new ConfigService();
+
+            // 初始根据系统主题
+            ThemeMode = DetectSystemTheme();
+            ApplyThemeResources();
         }
 
         #endregion Constructors
@@ -49,6 +57,7 @@ namespace HttpFileServer.ViewModels
 
         public CommandImpl CommandStartServer { get; private set; }
         public CommandImpl CommandStopServer { get; private set; }
+        public CommandImpl CommandToggleTheme { get; private set; }
         public Dispatcher Dispatcher { get; set; }
 
         public bool EnableUpload
@@ -91,6 +100,8 @@ namespace HttpFileServer.ViewModels
             set => SetProperty(ref _status, value);
         }
 
+        public string ThemeMode { get => _themeMode; set => SetProperty(ref _themeMode, value); }
+
         #endregion Properties
 
         #region Methods
@@ -116,6 +127,9 @@ namespace HttpFileServer.ViewModels
             SourceDir = cfg.RootDir;
             ListenPort = cfg.Port;
             EnableUpload = cfg.EnableUpload;
+            // 加载保存的主题模式
+            if (!string.IsNullOrWhiteSpace(cfg.ThemeMode)) ThemeMode = cfg.ThemeMode; else ThemeMode = DetectSystemTheme();
+            ApplyThemeResources();
 
             Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
         }
@@ -128,6 +142,7 @@ namespace HttpFileServer.ViewModels
             _config.RootDir = SourceDir;
             _config.Port = (ushort)ListenPort;
             _config.EnableUpload = EnableUpload;
+            _config.ThemeMode = ThemeMode; // 保存当前主题模式
             _cfgSrv.SaveConfig(_config);
 
             base.OnViewUnLoaded(sender);
@@ -209,6 +224,57 @@ namespace HttpFileServer.ViewModels
             Status = ServerStatus.Stopped;
             CommandStartServer?.RaiseCanExecuteChanged();
             CommandStopServer?.RaiseCanExecuteChanged();
+        }
+
+        private ResourceDictionary GetWindowResources()
+        {
+            foreach (Window w in Application.Current.Windows)
+            {
+                if (w.DataContext == this)
+                    return w.Resources; // 当前窗口资源
+            }
+            return Application.Current.Resources; //退回应用级
+        }
+
+        private string DetectSystemTheme()
+        {
+            // 简单使用系统窗口颜色亮度判断
+            var col = SystemParameters.WindowGlassColor; // Win7+ Aero色
+            var brightness = (col.R *299 + col.G *587 + col.B *114) /1000;
+            return brightness <128 ? "Dark" : "Light";
+        }
+
+        private void OnToggleTheme()
+        {
+            if (ThemeMode == "Light") ThemeMode = "Dark";
+            else if (ThemeMode == "Dark") ThemeMode = "System";
+            else ThemeMode = "Light";
+            ApplyThemeResources();
+            // 实时保存配置
+            _config.ThemeMode = ThemeMode;
+            _cfgSrv.SaveConfig(_config);
+        }
+
+        private void ApplyThemeResources()
+        {
+            var dict = GetWindowResources();
+            string mode = ThemeMode == "System" ? DetectSystemTheme() : ThemeMode;
+            if (mode == "Dark")
+            {
+                dict["WindowBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0x1E,0x1E,0x1E));
+                dict["WindowForegroundBrush"] = new SolidColorBrush(Colors.WhiteSmoke);
+                dict["PanelBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0x2A,0x2A,0x2A));
+                dict["PanelBorderBrush"] = new SolidColorBrush(Color.FromRgb(0x44,0x44,0x44));
+                dict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x3B,0x82,0xF6));
+            }
+            else // Light
+            {
+                dict["WindowBackgroundBrush"] = new SolidColorBrush(Colors.White);
+                dict["WindowForegroundBrush"] = new SolidColorBrush(Color.FromRgb(0x11,0x11,0x11));
+                dict["PanelBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0xF5,0xF5,0xF5));
+                dict["PanelBorderBrush"] = new SolidColorBrush(Color.FromRgb(0xDD,0xDD,0xDD));
+                dict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x3B,0x82,0xF6));
+            }
         }
 
         #endregion Methods

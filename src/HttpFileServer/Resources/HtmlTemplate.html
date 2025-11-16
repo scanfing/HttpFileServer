@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
@@ -7,6 +7,69 @@
     <title>文件管理系统</title>
     <script>{{tailwindcss}}</script>
     <style>
+        :root {
+            --bg: #f9fafb;
+            --panel-bg: #ffffff;
+            --panel-border: #e5e7eb;
+            --text: #111827;
+            --text-secondary: #6b7280;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --popover-bg: #ffffff;
+        }
+
+        [data-theme='dark'] {
+            --bg: #0f172a;
+            --panel-bg: #1e293b;
+            --panel-border: #334155;
+            --text: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --popover-bg: #1e293b;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            background: var(--panel-bg);
+            border-color: var(--panel-border);
+        }
+
+        .theme-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+        }
+
+        .panel-border {
+            border-color: var(--panel-border);
+        }
+
+        .text-primary {
+            color: var(--text);
+        }
+
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-accent:hover {
+            background: var(--accent-hover);
+        }
+
+        a,
+        button {
+            transition: background .2s, color .2s, border-color .2s;
+        }
+
         .table-container {
             overflow-y: auto;
         }
@@ -15,6 +78,7 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            background: var(--panel-bg);
         }
 
         .icon {
@@ -38,13 +102,54 @@
             background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYUR5ccllPAAAAmlJREFUeNpsU0toU0EUPfPysx/tTxuDH9SCWhUDooIbd7oRUUTMouqi2iIoCO6lceHWhegy4EJFinWjrlQUpVm0IIoFpVDEIthm0dpikpf3ZuZ6Z94nrXhhMjM3c8895977BBHB2PznK8WPtDgyWH5q77cPH8PpdXuhpQT4ifR9u5sfJb1bmw6VivahATDrxcRZ2njfoaMv+2j7mLDn93MPiNRMvGbL18L9IpF8h9/TN+EYkMffSiOXJ5+hkD+PdqcLpICWHOHc2CC+LEyA/K+cKQMnlQHJX8wqYG3MAJy88Wa4OLDvEqAEOpJd0LxHIMdHBziowSwVlF8D6QaicK01krw/JynwcKoEwZczewroTvZirlKJs5CqQ5CG8pb57FnJUA0LYCXMX5fibd+p8LWDDemcPZbzQyjvH+Ki1TlIciElA7ghwLKV4kRZstt2sANWRjYTAGzuP2hXZFpJ/GsxgGJ0ox1aoFWsDXyyxqCs26+ydmagFN/rRjymJ1898bzGzmQE0HCZpmk5A0RFIv8Pn0WYPsiu6t/Rsj6PauVTwffTSzGAGZhUG2F06hEc9ibS7OPMNp6ErYFlKavo7MkhmTqCxZ/jwzGA9Hx82H2BZSw1NTN9Gx8ycHkajU/7M+jInsDC7DiaEmo1bNl1AMr9ASFgqVu9MCTIzoGUimXVAnnaN0PdBBDCCYbEtMk6wkpQwIG0sn0PQIUF4GsTwLSIFKNqF6DVrQq+IWVrQDxAYQC/1SsYOI4pOxKZrfifiUSbDUisif7XlpGIPufXd/uvdvZm760M0no1FZcnrzUdjw7au3vu/BVgAFLXeuTxhTXVAAAAAElFTkSuQmCC ") left top no-repeat;
         }
 
+        /* 行悬停颜色适配 */
+        tbody#tableBody tr.row-hover {
+            background: transparent;
+        }
+
+        [data-theme='light'] tbody#tableBody tr.row-hover:hover {
+            background: #f1f5f9;
+        }
+
+        [data-theme='dark'] tbody#tableBody tr.row-hover:hover {
+            background: #243449;
+        }
+
+        /* 文件名颜色在不同主题下加强对比 */
+        [data-theme='light'] .file-name {
+            color: #111827;
+            font-weight: 500;
+        }
+
+        [data-theme='dark'] .file-name {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        [data-theme='dark'] .file-link:hover .file-name {
+            color: #ffffff;
+        }
+
+        /* 目录名在暗色模式下进一步提亮并加粗 */
+        [data-theme='dark'] a[data-filetype='dir'] .file-name,
+        [data-theme='dark'] a[data-filetype='up'] .file-name {
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        [data-theme='dark'] a[data-filetype='dir']:hover .file-name,
+        [data-theme='dark'] a[data-filetype='up']:hover .file-name {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
         /* 悬停浮层 */
         #previewPopover {
             position: absolute;
             top: 0;
             left: 0;
-            background: #fff;
-            border: 1px solid #d1d5db;
+            background: var(--popover-bg);
+            border: 1px solid var(--panel-border);
             /* 灰色边框 */
             border-radius: 4px;
             padding: 6px 8px;
@@ -91,11 +196,13 @@
         }
 
         #previewModalInner {
-            background: #fff;
+            background: var(--panel-bg);
+            color: var(--text);
             border-radius: 8px;
             max-width: 60%;
             width: 100%;
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--panel-border);
         }
 
         #previewModal.show {
@@ -187,87 +294,101 @@
                 transform: translateY(0);
             }
         }
+
+        .theme-toggle-btn {
+            position: fixed;
+            bottom: 16px;
+            right: 20px;
+            padding: 6px 10px;
+            font-size: 12px;
+            border: 1px solid var(--panel-border);
+            background: var(--panel-bg);
+            color: var(--text);
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-toggle-btn:hover {
+            background: var(--accent);
+            color: #fff;
+        }
     </style>
     <title id="title">{{title}}</title>
 </head>
 
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen">
     <!--头部导航 -->
-    <header class="h-16 bg-white shadow-sm border-b">
+    <header class="h-16 shadow-sm border-b">
         <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <h1 class="text-xl font-semibold text-gray-900">{{header}}</h1>
+                    <h1 class="text-xl font-semibold text-primary">{{header}}</h1>
                 </div>
             </div>
+        </div>
     </header>
 
     <div class="h-[calc(100vh-128px)] w-full px-4 sm:px-6 lg:px-8 py-8">
         <!-- 文件操作区域 -->
-        <div class="h-full bg-white rounded-lg shadow-sm border box-border">
+        <div class="h-full theme-panel rounded-lg shadow-sm">
             <!--视图切换区域 -->
             <div id="fileContainer" class="h-full p-6 relative flex flex-col">
                 <!-- 表格视图 -->
                 <div id="tableViewContent" class="table-container flex-auto h-full mb-4">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="table-header bg-gray-50">
+                    <table class="min-w-full divide-y" style="border-color:var(--panel-border)">
+                        <thead class="table-header">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名称
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">大小
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">修改日期
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作
-                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">名称</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">大小</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">修改日期</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">类型</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">操作</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody" class="bg-white divide-y divide-gray-200">
+                        <tbody id="tableBody" class="divide-y" style="border-color:var(--panel-border)">
                             {{tableRows}}
                         </tbody>
                     </table>
                 </div>
                 <!-- 概览信息 -->
                 <div class="flex-none">
-                    <span class="text-sm text-gray-600">总计: {{itemcount}} 个项目</span>
+                    <span class="text-sm text-secondary">总计: {{itemcount}} 个项目</span>
                 </div>
             </div>
         </div>
     </div>
     <!-- 底部导航 -->
     <footer class="flex justify-center pb-8">
-        <div class="flex items-center space-x-2 text-gray-400">{{footer}}</div>
+        <div class="flex items-center space-x-2 text-secondary">{{footer}}</div>
     </footer>
-
-    <!-- 悬停预览浮层 -->
-    <div id="previewPopover" class="hidden"></div>
-
-    <!-- 修改后的预览模态框 -->
-    <div id="previewModal" class="hidden">
-        <div id="previewModalInner" class="rounded-xl">
-            <div class="px-4 py-2 border-b flex items-center space-x-2">
-                <button id="prevBtn" class="px-2 py-1 text-xs border rounded disabled:opacity-30" onclick="previewPrev()">
-                    ◀
-                </button>
-                <button id="nextBtn" class="px-2 py-1 text-xs border rounded disabled:opacity-30" onclick="previewNext()">
-                    ▶
-                </button>
-                <h3 id="previewTitle" class="text-sm font-semibold text-gray-900 flex-1 truncate">文件预览</h3>
-                <button id="closePreview" class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600" onclick="closePreview()">关闭</button>
-            </div>
-            <div class="p-4">
-                <div id="previewContent" class="flex justify-center"></div>
-            </div>
-        </div>
-    </div>
+    <!--主题切换按钮移动到底部右侧固定位置 -->
+    <button id="themeToggle" class="theme-toggle-btn" type="button">切换主题</button>
     {{uploadSection}}
     <script>
+        //主题初始化与切换
+        const root = document.documentElement;
+        const savedTheme = localStorage.getItem('webTheme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function applyTheme(mode) {
+            root.setAttribute('data-theme', mode);
+        }
+        applyTheme(savedTheme ? savedTheme : (prefersDark.matches ? 'dark' : 'light'));
+        prefersDark.addEventListener('change', e => {
+            if (!localStorage.getItem('webTheme')) applyTheme(e.matches ? 'dark' : 'light');
+        });
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const cur = root.getAttribute('data-theme');
+            const next = cur === 'dark' ? 'light' : 'dark';
+            applyTheme(next);
+            localStorage.setItem('webTheme', next);
+        });
+
+        // ===== 原有脚本保持 =====
         let files = [];
-        const mainBody = document.querySelector("body");
+        const mainBody = document.querySelector('body');
         const uploadManager = new UploadManager();
-        //预览文件列表与当前索引
         let previewFileNames = [];
         let currentPreviewIndex = -1;
 
@@ -281,7 +402,6 @@
 
             for (const item of event.dataTransfer.items) {
                 const entry = item.webkitGetAsEntry();
-                console.log("[ entry ] >", entry);
                 promises.push(readFiles(entry));
             }
 
@@ -289,11 +409,12 @@
             files = resultFilesArrays.flat().reverse();
 
             let dataStr = files.map(file => `
-                                                                  <tr class="hover:bg-gray-50 transition-colors">
-                                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${file.fullPath}</td>
-                                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${getFileSize(file.size)}</td>
-                                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(file.lastModifiedDate)}</td>
-                                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 uploadStatus">待上传</td>
+                                                                  <tr class='hover:bg-gray-50 transition-colors'>
+                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
+                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
+                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
+                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.type}</td>
+                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
                                                                   </tr>
                                                               `).join('');
 
@@ -448,7 +569,7 @@
 
         function openPreviewByName(fileName, coords = null, asPopover = false) {
             if (asPopover) {
-                popover.innerHTML = '<div class="text-gray-400 text-[11px]">加载中...</div>';
+                popover.innerHTML = '<div class="text-secondary text-[11px]">加载中...</div>';
                 popover.classList.remove('hidden');
                 positionPopover(coords);
             }
@@ -481,7 +602,7 @@
                             popover.innerHTML = '<div class="text-red-500">预览失败</div>';
                         });
                 } else {
-                    popover.innerHTML = '<div class="text-gray-600">不支持预览</div>';
+                    popover.innerHTML = '<div class="text-secondary">不支持预览</div>';
                 }
                 return; // 不走模态框逻辑
             }
@@ -507,7 +628,8 @@
                     .then(text => {
                         el = document.createElement('pre');
                         el.textContent = text;
-                        el.classList.add('whitespace-pre-wrap', 'bg-gray-100', 'p-3', 'rounded', 'max-h-[60vh]', 'overflow-auto', 'text-xs');
+                        el.classList.add('whitespace-pre-wrap', 'p-3', 'rounded', 'max-h-[60vh]', 'overflow-auto', 'text-xs');
+                        el.style.background = 'var(--panel-border)';
                         contentEl.appendChild(el);
                         modal.classList.remove('hidden');
                         modal.style.display = 'flex';
@@ -523,7 +645,7 @@
             } else {
                 el = document.createElement('p');
                 el.textContent = '不支持预览此文件类型。';
-                el.classList.add('text-gray-600');
+                el.classList.add('text-secondary');
                 contentEl.appendChild(el);
                 modal.classList.remove('hidden');
                 modal.style.display = 'flex';

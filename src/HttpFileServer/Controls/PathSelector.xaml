@@ -8,21 +8,43 @@
              d:DesignHeight="40"
              d:DesignWidth="320"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style TargetType="TextBox" x:Key="PathSelectorTextBoxStyle">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource WindowForegroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
+        </Style>
+        <Style TargetType="Button" x:Key="PathSelectorButtonStyle">
+            <Setter Property="Foreground" Value="{DynamicResource WindowForegroundBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="White" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" MinWidth="100" />
             <ColumnDefinition Width="8" />
-            <ColumnDefinition Width="64" MinWidth="64" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <TextBox x:Name="txtPath"
-                 VerticalContentAlignment="Center"
-                 IsReadOnly="true"
-                 MouseDoubleClick="DoSelectPathClick"
-                 Text="{Binding RelativeSource={RelativeSource AncestorLevel=1, AncestorType=local:PathSelector, Mode=FindAncestor}, Path=SelectedPath, Mode=TwoWay}" />
-        <Button Grid.Column="2"
-                Height="30"
-                Background="Transparent"
-                Click="Btn_SelectPath_Click"
-                Content="..." />
+        <TextBox x:Name="txtPath" Style="{StaticResource PathSelectorTextBoxStyle}" VerticalContentAlignment="Center" IsReadOnly="true" MouseDoubleClick="DoSelectPathClick" Text="{Binding RelativeSource={RelativeSource AncestorLevel=1, AncestorType=local:PathSelector, Mode=FindAncestor}, Path=SelectedPath, Mode=TwoWay}" />
+        <Button Grid.Column="2" Height="30" Style="{StaticResource PathSelectorButtonStyle}" Click="Btn_SelectPath_Click" Content="..." />
     </Grid>
 </UserControl>

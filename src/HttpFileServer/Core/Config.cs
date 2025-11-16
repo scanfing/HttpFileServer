@@ -14,6 +14,8 @@ namespace HttpFileServer.Core
         public ushort Port { get; set; } = 80;
         public List<string> RecentDirs { get; set; }
         public string RootDir { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        // 新增主题模式保存 (Light / Dark / System)
+        public string ThemeMode { get; set; } = "System";
 
         #endregion Properties
     }

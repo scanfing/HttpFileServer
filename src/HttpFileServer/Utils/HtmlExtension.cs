@@ -23,9 +23,9 @@ namespace HttpFileServer.Utils
             StringBuilder sb = new StringBuilder();
             if (showParent)
             {
-                // 渲染“上一级”目录行，不包含打包下载按钮
-                sb.AppendLine("<tr class=\"hover:bg-gray-50 transition-colors\">" +
-                              "<td class=\"px-6 py-4 whitespace-nowrap\"><div class=\"flex items-center\"><a href=\"../\"><i class=\"icon dir mr-1\"></i><span class=\"text-sm text-gray-900 text-ellipsis\">..</span></a></div></td>" +
+                // 上一级目录行使用统一的样式和暗色主题高亮支持
+                sb.AppendLine("<tr class=\"row-hover transition-colors\">" +
+                              "<td class=\"px-6 py-4 whitespace-nowrap\"><div class=\"flex items-center\"><a href=\"../\" class=\"file-link\" data-filetype=\"up\"><i class=\"icon up mr-1\"></i><span class=\"file-name text-sm\">..</span></a></div></td>" +
                               "<td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500\">--</td>" +
                               "<td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500\">--</td>" +
                               "<td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500\">上一级</td>" +
