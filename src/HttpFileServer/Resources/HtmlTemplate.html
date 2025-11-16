@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件管理系统</title>
+    <title>HttpFileServer</title>
     <script>{{tailwindcss}}</script>
     <style>
         :root {
@@ -102,16 +102,16 @@
             background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYUR5ccllPAAAAmlJREFUeNpsU0toU0EUPfPysx/tTxuDH9SCWhUDooIbd7oRUUTMouqi2iIoCO6lceHWhegy4EJFinWjrlQUpVm0IIoFpVDEIthm0dpikpf3ZuZ6Z94nrXhhMjM3c8895977BBHB2PznK8WPtDgyWH5q77cPH8PpdXuhpQT4ifR9u5sfJb1bmw6VivahATDrxcRZ2njfoaMv+2j7mLDn93MPiNRMvGbL18L9IpF8h9/TN+EYkMffSiOXJ5+hkD+PdqcLpICWHOHc2CC+LEyA/K+cKQMnlQHJX8wqYG3MAJy88Wa4OLDvEqAEOpJd0LxHIMdHBziowSwVlF8D6QaicK01krw/JynwcKoEwZczewroTvZirlKJs5CqQ5CG8pb57FnJUA0LYCXMX5fibd+p8LWDDemcPZbzQyjvH+Ki1TlIciElA7ghwLKV4kRZstt2sANWRjYTAGzuP2hXZFpJ/GsxgGJ0ox1aoFWsDXyyxqCs26+ydmagFN/rRjymJ1898bzGzmQE0HCZpmk5A0RFIv8Pn0WYPsiu6t/Rsj6PauVTwffTSzGAGZhUG2F06hEc9ibS7OPMNp6ErYFlKavo7MkhmTqCxZ/jwzGA9Hx82H2BZSw1NTN9Gx8ycHkajU/7M+jInsDC7DiaEmo1bNl1AMr9ASFgqVu9MCTIzoGUimXVAnnaN0PdBBDCCYbEtMk6wkpQwIG0sn0PQIUF4GsTwLSIFKNqF6DVrQq+IWVrQDxAYQC/1SsYOI4pOxKZrfifiUSbDUisif7XlpGIPufXd/uvdvZm760M0no1FZcnrzUdjw7au3vu/BVgAFLXeuTxhTXVAAAAAElFTkSuQmCC ") left top no-repeat;
         }
 
-        /* 行悬停颜色适配 */
-        tbody#tableBody tr.row-hover {
+        /* 行悬停颜色适配（统一应用于所有表格，包括上传列表#fileInfo 与主列表#tableBody） */
+        tr.row-hover {
             background: transparent;
         }
 
-        [data-theme='light'] tbody#tableBody tr.row-hover:hover {
+        [data-theme='light'] tr.row-hover:hover {
             background: #f1f5f9;
         }
 
-        [data-theme='dark'] tbody#tableBody tr.row-hover:hover {
+        [data-theme='dark'] tr.row-hover:hover {
             background: #243449;
         }
 
@@ -130,7 +130,7 @@
             color: #ffffff;
         }
 
-        /* 目录名在暗色模式下进一步提亮并加粗 */
+        /*目录/上一级在暗色模式下进一步提亮并加粗 */
         [data-theme='dark'] a[data-filetype='dir'] .file-name,
         [data-theme='dark'] a[data-filetype='up'] .file-name {
             color: #f8fafc;
@@ -143,7 +143,7 @@
             text-decoration: underline;
         }
 
-        /* 悬停浮层 */
+        /* 悬停预览浮层 */
         #previewPopover {
             position: absolute;
             top: 0;
@@ -362,7 +362,7 @@
     <footer class="flex justify-center pb-8">
         <div class="flex items-center space-x-2 text-secondary">{{footer}}</div>
     </footer>
-    <!--主题切换按钮移动到底部右侧固定位置 -->
+    <!--主题切换按钮（固定右下角） -->
     <button id="themeToggle" class="theme-toggle-btn" type="button">切换主题</button>
     {{uploadSection}}
     <script>
@@ -409,14 +409,13 @@
             files = resultFilesArrays.flat().reverse();
 
             let dataStr = files.map(file => `
-                                                                  <tr class='hover:bg-gray-50 transition-colors'>
-                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
-                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
-                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
-                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.type}</td>
-                                                                    <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
-                                                                  </tr>
-                                                              `).join('');
+ <tr class='row-hover transition-colors'>
+ <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
+ <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
+ <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
+ <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
+ </tr>
+ `).join('');
 
             document.querySelector("#fileInfo").innerHTML = dataStr;
             const overview = document.getElementById('overview')
@@ -720,4 +719,4 @@
     </script>
 </body>
 
-</html>
+</html></html>
