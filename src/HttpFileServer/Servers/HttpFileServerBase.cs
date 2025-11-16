@@ -150,6 +150,15 @@ namespace HttpFileServer.Servers
 
             try
             {
+                //统一处理OPTIONS预检
+                if (method == "OPTIONS")
+                {
+                    response.AddHeader("Access-Control-Allow-Origin", "*");
+                    response.AddHeader("Access-Control-Allow-Methods", string.Join(",", RegisteredHandlers.Keys.Concat(new[] { "OPTIONS" })));
+                    response.AddHeader("Access-Control-Allow-Headers", "Content-Type,X-Requested-With");
+                    response.StatusCode = (int)HttpStatusCode.NoContent;
+                    return; // 跳过后续关闭逻辑，由 finally继续 close
+                }
                 var handler = GetHandlerByMethodName(method);
                 if (handler is null)
                     response.StatusCode = (int)HttpStatusCode.Forbidden;
@@ -164,11 +173,11 @@ namespace HttpFileServer.Servers
             finally
             {
                 response.AddHeader("Access-Control-Allow-Origin", "*");
-                response.AddHeader("Access-Control-Allow-Methods", string.Join(",", RegisteredHandlers.Keys));
-                try { response.Close(); }
-                catch { }
+                response.AddHeader("Access-Control-Allow-Methods", string.Join(",", RegisteredHandlers.Keys.Concat(new[] { "OPTIONS" })));
+                response.AddHeader("Access-Control-Allow-Headers", "Content-Type,X-Requested-With");
+                try { response.Close(); } catch { }
                 RecordLog($"{remotePoint} {method} {url} {range} {response.StatusCode}");
-                RaiseRequestOut(requestModel);                
+                RaiseRequestOut(requestModel);
             }
         }
 

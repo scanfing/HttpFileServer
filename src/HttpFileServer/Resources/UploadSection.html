@@ -1,295 +1,64 @@
 ﻿<noscript>
-    <strong>很抱歉，如果没有启用JavaScript，web将无法正常工作。请启用后继续。</strong>
-    <strong>We're sorry but web doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+ <strong>很抱歉，如果没有启用JavaScript，web将无法正常工作。请启用后继续。</strong>
+ <strong>We're sorry but web doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
 </noscript>
 <!-- 拖拽上传模态框 -->
 <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white rounded-xl shadow-2xl max-w-[50%] w-full mx-4 transform transition-all">
-        <div class="px-6 py-4 border-b">
-            <h3 class="text-lg font-semibold text-gray-900">上传文件</h3>
-        </div>
-        <div class="p-6">
-            <div class="mb-6">
-                <!-- 文件信息将通过JavaScript动态生成 -->
-                <table class="w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名称</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">大小</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">修改日期</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">上传状态</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fileInfo" class="bg-white divide-y divide-gray-200">
-                        <!-- 表格数据将通过JavaScript动态生成 -->
-                    </tbody>
-                </table>
-                <div class="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <p id="overview" class="text-center text-sm text-blue-700"></p>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-3">
-                <button id="confirm" class="hidden px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="cancel()">
-                    确定
-                </button>
-                <button id="cancel" class="hidden px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" onclick="cancel()">
-                    取消
-                </button>
-                <button id="uploader" class="hidden px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="sendFiles()">
-                    上传
-                </button>
-            </div>
-        </div>
-    </div>
+ <div class="bg-white rounded-xl shadow-2xl w-full max-w-[70%] max-h-[80vh] mx-4 flex flex-col">
+ <div class="px-6 py-3 border-b flex items-center justify-between">
+ <h3 class="text-sm font-semibold text-gray-900">上传文件</h3>
+ <button class="text-xs text-gray-500 hover:text-gray-700" onclick="cancel()">关闭</button>
+ </div>
+ <div class="flex-1 overflow-hidden flex flex-col">
+ <div class="flex-1 overflow-auto">
+ <table class="w-full divide-y divide-gray-200 text-xs">
+ <thead class="bg-gray-50 sticky top-0">
+ <tr>
+ <th class="px-3 py-2 text-left font-medium text-gray-500">名称</th>
+ <th class="px-3 py-2 text-left font-medium text-gray-500">大小</th>
+ <th class="px-3 py-2 text-left font-medium text-gray-500">修改日期</th>
+ <th class="px-3 py-2 text-left font-medium text-gray-500">状态</th>
+ </tr>
+ </thead>
+ <tbody id="fileInfo" class="bg-white divide-y divide-gray-100"></tbody>
+ </table>
+ </div>
+ <div class="mt-2 p-2 bg-blue-50 text-center text-[11px] text-blue-700" id="overview"></div>
+ </div>
+ <div class="px-4 py-3 border-t flex justify-end space-x-2">
+ <button id="confirm" class="hidden px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs" onclick="cancel()">确定</button>
+ <button id="cancel" class="hidden px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 text-xs" onclick="cancel()">取消</button>
+ <button id="uploader" class="hidden px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs" onclick="sendFiles()">开始上传</button>
+ </div>
+ </div>
 </div>
-
 <script>
-
-    class ConcurrentUploadQueue {
-        constructor(maxConcurrent = 3) {
-            this.maxConcurrent = maxConcurrent;
-            this.running = 0;
-            this.queue = [];
-            this.completed = 0;
-            this.total = 0;
-            this.results = [];
-            this.errors = [];
-
-            // 事件回调函数
-            this.onProgress = null;
-            this.onComplete = null;
-            this.onError = null;
-        }
-
-        // 添加上传任务
-        addTask(uploadFunction, file, options = {}) {
-            return new Promise((resolve, reject) => {
-                this.queue.push({
-                    uploadFunction,
-                    file,
-                    options,
-                    resolve,
-                    reject
-                });
-                this.total++;
-            });
-        }
-
-        // 开始执行任务队列
-        startTask() {
-            this._next();
-        }
-
-        // 执行下一个任务
-        _next() {
-            if (this.running >= this.maxConcurrent || this.queue.length === 0) {
-                return;
-            }
-
-            const task = this.queue.shift();
-            this.running++;
-
-            // 更新进度
-            this._updateProgress();
-
-            task.uploadFunction(task.file, task.options)
-                .then(result => {
-                    this.results.push({
-                        file: task.file,
-                        result,
-                        timestamp: new Date()
-                    });
-                    task.resolve(result);
-                })
-                .catch(error => {
-                    this.errors.push({
-                        file: task.file,
-                        error,
-                        timestamp: new Date()
-                    });
-                    task.reject(error);
-
-                    // 触发错误回调
-                    if (this.onError) {
-                        this.onError(error, task.file);
-                    }
-                })
-                .finally(() => {
-                    this.running--;
-                    this.completed++;
-                    this._updateProgress();
-
-                    // 检查是否全部完成
-                    if (this.completed === this.total && this.running === 0) {
-                        this._onComplete();
-                    }
-
-                    this._next();
-                });
-
-            if (this.running < this.maxConcurrent || this.queue.length === 0) {
-                this._next();
-            }
-        }
-
-        // 更新进度
-        _updateProgress() {
-            if (!this.running && !this.queue.length && !this.completed && !this.total) return
-            if (this.onProgress) {
-                this.onProgress({
-                    completed: this.completed,
-                    total: this.total,
-                    running: this.running,
-                    queued: this.queue.length,
-                    progress: this.total > 0 ? (this.completed / this.total) * 100 : 0
-                });
-            }
-        }
-
-        // 全部完成回调
-        _onComplete() {
-            if (this.onComplete) {
-                this.onComplete({
-                    results: this.results,
-                    errors: this.errors,
-                    total: this.total,
-                    completed: this.completed
-                });
-            }
-        }
-
-        // 设置并发数
-        setConcurrency(maxConcurrent) {
-            this.maxConcurrent = maxConcurrent;
-
-            // 如果并发数增加，立即启动更多任务
-            while (this.running < this.maxConcurrent && this.queue.length > 0) {
-                this._next();
-            }
-        }
-
-        // 获取队列状态
-        getStatus() {
-            return {
-                running: this.running,
-                queued: this.queue.length,
-                completed: this.completed,
-                total: this.total,
-                progress: this.total > 0 ? (this.completed / this.total) * 100 : 0,
-                results: this.results,
-                errors: this.errors
-            };
-        }
-
-        // 清理队列
-        clear() {
-            this.running = 0;
-            this.queue = [];
-            this.completed = 0;
-            this.total = 0;
-            this.results = [];
-            this.errors = [];
-        }
-    }
-
-    class UploadManager {
-
-        constructor() {
-            this.uploadServer = './'
-            this.queue = new ConcurrentUploadQueue(2); // 默认并发数为2
-            this.setupEventListeners();
-            this.onComplete = null
-        }
-
-        // 文件上传函数
-        async simulateUpload(file, progressEle) {
-            return new Promise((resolve, reject) => {
-                let fd = new FormData()
-
-                fd.append(fileName, file)
-
-                let xhr = new XMLHttpRequest()
-
-                xhr.open('POST', this.uploadServer, true)
-
-                xhr.onreadystatechange = function () {
-                    if (xhr.status == 200) {
-                        progressEle.innerText = `上传完毕`
-                        resolve(options)
-                    } else {
-                        progressEle.innerText = `上传失败`
-                        reject(options)
-                    }
-                }
-
-                // 下载进度
-                xhr.onprogress = (e) => {
-                    // 已上传/总大小 取两位小数
-                    const p = ((e.loaded / e.total) * 100).toFixed(2)
-                    progressEle.innerText = `上传中：${p}`
-                }
-                // 下载进度
-
-                xhr.send(fd)
-            });
-        }
-
-        // 添加文件到上传队列
-        addFiles(files) {
-            return new Promise(resolve => {
-                for (const item of files) {
-                    this.queue.addTask(
-                        this.simulateUpload.bind(this),
-                        item.file,
-                        item.progressEle
-                    ).then(result => {
-                        console.log(`文件 ${item.file.name} 上传成功:`, result);
-                    }).catch(error => {
-                        console.error(`文件 ${item.file.name} 上传失败:`, error);
-                    });
-                }
-                resolve()
-            })
-        }
-
-        // 设置事件监听
-        setupEventListeners() {
-            this.queue.onProgress = (progress) => {
-                this.updateProgressUI(progress);
-            };
-
-            this.queue.onComplete = (summary) => {
-                this.onComplete && this.onComplete(summary)
-            };
-
-            this.queue.onError = (error, file) => {
-                console.error(`上传错误: ${file.name}`, error);
-            };
-        }
-
-        // 更新UI进度
-        updateProgressUI(progress) {
-            const progressBox = document.getElementById('overview');
-
-            if (progressBox) {
-                progressBox.innerText =
-                    `进度: ${progress.completed}/${progress.total} | 运行中: ${progress.running} | 等待中: ${progress.queued}`;
-            }
-        }
-
-        // 改变并发数
-        changeConcurrency(value) {
-            this.queue.setConcurrency(value);
-            console.log(`并发数已改为: ${value}`);
-        }
-
-        // 清除任务
-        clear() {
-            this.queue.clear()
-            const progressBox = document.getElementById('overview')
-            if (progressBox) {
-                progressBox.innerText = ''
-            }
-        }
-    }
+class ConcurrentUploadQueue {
+ constructor(maxConcurrent=3){ this.maxConcurrent=maxConcurrent; this.running=0; this.queue=[]; this.completed=0; this.total=0; this.results=[]; this.errors=[]; this.onProgress=null; this.onComplete=null; this.onError=null; }
+ addTask(uploadFunction, file, progressEle){ return new Promise((resolve,reject)=>{ this.queue.push({uploadFunction,file,progressEle,resolve,reject}); this.total++; }); }
+ startTask(){ this._next(); }
+ _next(){ if(this.running>=this.maxConcurrent || this.queue.length===0) return; const task=this.queue.shift(); this.running++; this._updateProgress(); task.uploadFunction(task.file, task.progressEle).then(r=>{ this.results.push({file:task.file,result:r,timestamp:new Date()}); task.resolve(r); }).catch(err=>{ this.errors.push({file:task.file,error:err,timestamp:new Date()}); task.reject(err); if(this.onError) this.onError(err, task.file); }).finally(()=>{ this.running--; this.completed++; this._updateProgress(); if(this.completed===this.total && this.running===0) this._onComplete(); this._next(); }); if(this.running < this.maxConcurrent && this.queue.length>0) this._next(); }
+ _updateProgress(){ if(!this.onProgress) return; this.onProgress({completed:this.completed,total:this.total,running:this.running,queued:this.queue.length,progress:this.total>0?(this.completed/this.total)*100:0}); }
+ _onComplete(){ if(this.onComplete) this.onComplete({results:this.results,errors:this.errors,total:this.total,completed:this.completed}); }
+ setConcurrency(v){ this.maxConcurrent=v; while(this.running<this.maxConcurrent && this.queue.length>0) this._next(); }
+ getStatus(){ return {running:this.running,queued:this.queue.length,completed:this.completed,total:this.total,progress:this.total>0?(this.completed/this.total)*100:0,results:this.results,errors:this.errors}; }
+ clear(){ this.running=0; this.queue=[]; this.completed=0; this.total=0; this.results=[]; this.errors=[]; }
+}
+class UploadManager {
+ constructor(){ this.uploadServer = window.location.pathname.endsWith('/')? window.location.pathname : window.location.pathname + '/'; this.queue=new ConcurrentUploadQueue(3); this.onComplete=null; this.abortControllers=new Map(); this.setupEventListeners(); }
+ async uploadFile(file, progressEle){ return new Promise((resolve,reject)=>{ const xhr=new XMLHttpRequest(); const form=new FormData(); // 保留层级路径信息
+ const relPath = (file.fullPath || file.webkitRelativePath || file.name).replace(/^\\/,'').replace(/^\//,'');
+ form.append('file', file, file.name); // 原文件名
+ form.append('relativePath', relPath); // 包含目录+文件名
+ progressEle.innerText='准备上传';
+ xhr.open('POST', this.uploadServer, true);
+ xhr.setRequestHeader('X-Requested-With','HttpFileServer');
+ xhr.upload.onprogress=(e)=>{ if(e.lengthComputable){ const p=(e.loaded/e.total*100).toFixed(2); progressEle.innerText=`上传中：${p}%`; } };
+ xhr.onreadystatechange=()=>{ if(xhr.readyState===4){ if(xhr.status===200){ let resp=null; try{ resp=JSON.parse(xhr.responseText); }catch{} progressEle.innerText='完成'; resolve(resp||{ok:true}); } else { progressEle.innerText='失败'; reject(new Error('HTTP '+xhr.status)); } } };
+ xhr.onerror=()=>{ progressEle.innerText='错误'; reject(new Error('Network')); };
+ xhr.send(form); }); }
+ addFiles(fileItems){ return new Promise(resolve=>{ for(const item of fileItems){ this.queue.addTask(this.uploadFile.bind(this), item.file, item.progressEle).then(()=>{}).catch(()=>{}); } resolve(); }); }
+ setupEventListeners(){ this.queue.onProgress=(p)=>{ const overview=document.getElementById('overview'); if(overview) overview.innerText=`进度: ${p.completed}/${p.total} |运行中: ${p.running} | 等待: ${p.queued}`; }; this.queue.onComplete=(s)=>{ this.onComplete && this.onComplete(s); }; this.queue.onError=(err,file)=>{ console.error('上传错误', file.name, err); }; }
+ clear(){ this.queue.clear(); const overview=document.getElementById('overview'); if(overview) overview.innerText=''; }
+}
 </script>
