@@ -22,7 +22,18 @@ namespace HttpFileServer.Utils
             var index = 1;
             StringBuilder sb = new StringBuilder();
             if (showParent)
-                sb.Append($"<tr {(index++ % 2 == 1 ? "class=\"pure-table-odd\"" : "")}><td><a class=\"icon up\" href=\"../\"><span id=\"parentDirText\">[上一级]</span></a></td><td></td><td></tr>");
+            {
+                // 使用目录行模板渲染“上一级”按钮，结构与目录一致
+                var parentRow = HtmlResource.TableRowDirTemplate
+                    .Replace("./${file.name}/", "../")
+                    .Replace("${file.name}", "上一级")
+                    .Replace("${file.size}", "--")
+                    .Replace("${file.modified}", "--")
+                    .Replace("${file.type}", "目录");
+
+                sb.AppendLine(parentRow);
+                index++;
+            }
             foreach (var dir in dirs)
             {
                 var drinfo = new DirectoryInfo(dir);
@@ -55,7 +66,8 @@ namespace HttpFileServer.Utils
             var content = HtmlResource.HtmlTemplate;
             content = content.Replace("{{title}}", title);
             content = content.Replace("{{header}}", breadCrumb.ToString());
-            content = content.Replace("{{footerSectionContent}}", footerContent);
+            content = content.Replace("{{itemcount}}", (dirs.Length + files.Length).ToString());
+            content = content.Replace("{{footer}}", footerContent);
             content = content.Replace("{{uploadSection}}", enableUpload ? HtmlResource.UploadSection : "");
             content = content.Replace("{{tableRows}}", sb.ToString());
             return content;
@@ -64,11 +76,25 @@ namespace HttpFileServer.Utils
         public static string GetHtmlTableRowString(this FileSystemInfo info, bool isOdd)
         {
             if (info is DirectoryInfo dir)
-                return $"<tr {(isOdd ? "class=\"pure-table-odd\"" : "")}><td><a class=\"icon dir\" href=\"./{dir.Name}/\">{dir.Name}</a></td><td class='tdsize'>--</td><td class='tdtime'>{dir.LastWriteTime:yyyy-MM-dd HH:mm:ss}</td></tr>";
+            {
+                var dirStr = HtmlResource.TableRowDirTemplate;
+                dirStr = dirStr.Replace("${file.name}", dir.Name);
+                dirStr = dirStr.Replace("${file.size}", "--");
+                dirStr = dirStr.Replace("${file.modified}", dir.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                dirStr = dirStr.Replace("${file.type}", "--");
+                return dirStr;
+            }
             else if (info is FileInfo finfo)
-                return $"<tr {(isOdd ? "class=\"pure-table-odd\"" : "")}><td><a class=\"icon file\" href=\"./{finfo.Name}\">{finfo.Name}</a></td><td class='tdsize'>{SizeHelper.BytesToSize(finfo.Length)}</td><td class='tdtime'>{finfo.LastWriteTime:yyyy-MM-dd HH:mm:ss}</td></tr>";
-            else
-                return "";
+            {
+                var filestr = HtmlResource.TableRowFileTemplate;
+                filestr = filestr.Replace("${file.name}", finfo.Name);
+                filestr = filestr.Replace("${file.size}", SizeHelper.BytesToSize(finfo.Length));
+                filestr = filestr.Replace("${file.modified}", finfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                filestr = filestr.Replace("${file.type}", finfo.Extension);
+                return filestr;
+            }
+
+            return "";
         }
 
         #endregion Methods

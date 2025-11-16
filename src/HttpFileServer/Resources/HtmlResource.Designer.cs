@@ -19,7 +19,7 @@ namespace HttpFileServer.Resources {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class HtmlResource {
@@ -62,22 +62,15 @@ namespace HttpFileServer.Resources {
         
         /// <summary>
         ///   查找类似 &lt;!DOCTYPE html&gt;
-        ///&lt;html dir=&quot;ltr&quot; lang=&quot;zh&quot;&gt;
+        ///&lt;html lang=&quot;zh-CN&quot;&gt;
+        ///
         ///&lt;head&gt;
-        ///    &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=UTF-8&quot;&gt;
-        ///    &lt;meta name=&quot;google&quot; value=&quot;notranslate&quot;&gt;
-        ///    &lt;style&gt;
-        ///        /*!
-        ///        Pure v2.0.6
-        ///        Copyright 2013 Yahoo!
-        ///        Licensed under the BSD License.
-        ///        https://github.com/pure-css/pure/blob/master/LICENSE
-        ///        */
-        ///        /*!
-        ///        normalize.css v | MIT License | git.io/normalize
-        ///        Copyright (c) Nicolas Gallagher and Jonathan Neal
-        ///        */
-        ///        /*! normalize [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///    &lt;meta charset=&quot;UTF-8&quot;&gt;
+        ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+        ///    &lt;title&gt;文件管理系统&lt;/title&gt;
+        ///    &lt;script&gt;
+        ///        (() =&gt; {
+        ///            var qv = Object.create; var Hi = Object.defineProperty; var $v = Object.getOwnPropertyDescriptor; var Lv = Object.getOwnPropertyNames; var Mv = Object.getPrototypeOf, Nv = Object.prototype.hasOwnProperty; var df = r =&gt; Hi(r, &quot;__esModule&quot;, { value: !0 }); var hf = r =&gt; { if (typeof require [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string HtmlTemplate {
             get {
@@ -86,20 +79,51 @@ namespace HttpFileServer.Resources {
         }
         
         /// <summary>
+        ///   查找类似 &lt;tr class=&quot;hover:bg-gray-50 transition-colors&quot;&gt;
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap&quot;&gt;
+        ///        &lt;div class=&quot;flex items-center&quot;&gt;
+        ///            &lt;i class=&quot;icon dir mr-1&quot;&gt;&lt;/i&gt;
+        ///            &lt;span class=&quot;text-sm text-gray-900 text-ellipsis&quot;&gt;${file.name}&lt;/span&gt;
+        ///        &lt;/div&gt;
+        ///    &lt;/td&gt;
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.size}&lt;/td&gt;
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.modified}&lt;/td&gt;
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-s [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        /// </summary>
+        internal static string TableRowDirTemplate {
+            get {
+                return ResourceManager.GetString("TableRowDirTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 &lt;tr class=&quot;hover:bg-gray-50 transition-colors&quot;&gt;
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap&quot;&gt;
+        ///        &lt;div class=&quot;flex items-center&quot;&gt;
+        ///            &lt;i class=&quot;icon file mr-1&quot;&gt;&lt;/i&gt;
+        ///            &lt;span class=&quot;text-sm text-gray-900 text-ellipsis&quot;&gt;${file.name}&lt;/span&gt;
+        ///        &lt;/div&gt;
+        ///    &lt;/td&gt;
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.size}&lt;/td&gt;
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.modified}&lt;/td&gt;
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text- [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        /// </summary>
+        internal static string TableRowFileTemplate {
+            get {
+                return ResourceManager.GetString("TableRowFileTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 &lt;noscript&gt;
         ///    &lt;strong&gt;很抱歉，如果没有启用JavaScript，web将无法正常工作。请启用后继续。&lt;/strong&gt;
         ///    &lt;strong&gt;We&apos;re sorry but web doesn&apos;t work properly without JavaScript enabled. Please enable it to continue.&lt;/strong&gt;
         ///&lt;/noscript&gt;
-        ///&lt;section id=&quot;upload_box&quot; class=&quot;dialog-box&quot;&gt;
-        ///    &lt;section class=&quot;dialog-main&quot;&gt;
-        ///        &lt;section class=&quot;dialog-header&quot;&gt;
-        ///            文件上传
-        ///        &lt;/section&gt;
-        ///        &lt;section class=&quot;dialog-body&quot;&gt;
-        ///            &lt;table class=&quot;pure-table&quot;&gt;
-        ///                &lt;thead&gt;
-        ///                    &lt;tr&gt;
-        ///                        &lt;t [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///&lt;!-- 拖拽上传模态框 --&gt;
+        ///&lt;div id=&quot;uploadModal&quot; class=&quot;fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50&quot;&gt;
+        ///    &lt;div class=&quot;bg-white rounded-xl shadow-2xl max-w-[50%] w-full mx-4 transform transition-all&quot;&gt;
+        ///        &lt;div class=&quot;px-6 py-4 border-b&quot;&gt;
+        ///            &lt;h3 class=&quot;text-lg [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string UploadSection {
             get {

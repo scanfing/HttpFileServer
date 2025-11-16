@@ -242,6 +242,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\ICSharpCode.SharpZipLib.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\TableRowFileTemplate.html" />
+    <Content Include="Resources\TableRowDirTemplate.html" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

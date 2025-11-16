@@ -121,6 +121,12 @@
   <data name="HtmlTemplate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>HtmlTemplate.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="TableRowDirTemplate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>TableRowDirTemplate.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="TableRowFileTemplate" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>TableRowFileTemplate.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
   <data name="UploadSection" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>UploadSection.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>

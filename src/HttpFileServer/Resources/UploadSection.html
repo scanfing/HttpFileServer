@@ -2,116 +2,294 @@
     <strong>很抱歉，如果没有启用JavaScript，web将无法正常工作。请启用后继续。</strong>
     <strong>We're sorry but web doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
 </noscript>
-<section id="upload_box" class="dialog-box">
-    <section class="dialog-main">
-        <section class="dialog-header">
-            文件上传
-        </section>
-        <section class="dialog-body">
-            <table class="pure-table">
-                <thead>
-                    <tr>
-                        <th>文件名称</th>
-                        <th>文件大小</th>
-                        <th>修改时间</th>
-                    </tr>
-                </thead>
-                <tbody id="files"></tbody>
-            </table>
-        </section>
-        <section class="dialog-footer">
-            <button class="pure-button" onclick="cancel()">取消</button>
-            <button class="button-success pure-button" onclick="sendFiles()">上传</button>
-        </section>
-    </section>
-</section>
+<!-- 拖拽上传模态框 -->
+<div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-[50%] w-full mx-4 transform transition-all">
+        <div class="px-6 py-4 border-b">
+            <h3 class="text-lg font-semibold text-gray-900">上传文件</h3>
+        </div>
+        <div class="p-6">
+            <div class="mb-6">
+                <!-- 文件信息将通过JavaScript动态生成 -->
+                <table class="w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名称</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">大小</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">修改日期</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">上传状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fileInfo" class="bg-white divide-y divide-gray-200">
+                        <!-- 表格数据将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p id="overview" class="text-center text-sm text-blue-700"></p>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="confirm" class="hidden px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="cancel()">
+                    确定
+                </button>
+                <button id="cancel" class="hidden px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" onclick="cancel()">
+                    取消
+                </button>
+                <button id="uploader" class="hidden px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" onclick="sendFiles()">
+                    上传
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    let uploadServer = './'
-    let mainBody = document.querySelector('body')
-    let files = []
 
-    mainBody.addEventListener('dragover', dragoverHandle)
-    mainBody.addEventListener('dragleave', dragleaveHandle)
-    mainBody.addEventListener('drop', dropHandle)
+    class ConcurrentUploadQueue {
+        constructor(maxConcurrent = 3) {
+            this.maxConcurrent = maxConcurrent;
+            this.running = 0;
+            this.queue = [];
+            this.completed = 0;
+            this.total = 0;
+            this.results = [];
+            this.errors = [];
 
-    function dragoverHandle(event) {
-        event.preventDefault()
-    }
+            // 事件回调函数
+            this.onProgress = null;
+            this.onComplete = null;
+            this.onError = null;
+        }
 
-    function dragleaveHandle(event) {
-        event.preventDefault()
-    }
+        // 添加上传任务
+        addTask(uploadFunction, file, options = {}) {
+            return new Promise((resolve, reject) => {
+                this.queue.push({
+                    uploadFunction,
+                    file,
+                    options,
+                    resolve,
+                    reject
+                });
+                this.total++;
+            });
+        }
 
-    function dropHandle(event) {
-        event.preventDefault()
-        files = Array.from(event.dataTransfer.files)
+        // 开始执行任务队列
+        startTask() {
+            this._next();
+        }
 
-        let dataStr = '',
-            status = true
-        for (let file of files) {
-            if (status) {
-                dataStr += `<tr class="pure-table-odd"><td>${file.name}</td><td>${getFileSize(file.size)}</td><td>${formatDate(file.lastModifiedDate)}</td></tr>`
-            } else {
-                dataStr += `<tr><td>${file.name}</td><td>${getFileSize(file.size)}</td><td>${formatDate(file.lastModifiedDate)}</td></tr>`
+        // 执行下一个任务
+        _next() {
+            if (this.running >= this.maxConcurrent || this.queue.length === 0) {
+                return;
             }
-            status = !status
-        }
 
-        document.querySelector('#files').innerHTML = dataStr
-        document.querySelector('#upload_box').style.display = 'flex'
-    }
+            const task = this.queue.shift();
+            this.running++;
 
-    function sendFiles() {
-        let fd = new FormData()
+            // 更新进度
+            this._updateProgress();
 
-        for (let i = 0; i < files.length; i++) {
-            let fileName = `f${i}`
-            fd.append(fileName, files[i])
-        }
+            task.uploadFunction(task.file, task.options)
+                .then(result => {
+                    this.results.push({
+                        file: task.file,
+                        result,
+                        timestamp: new Date()
+                    });
+                    task.resolve(result);
+                })
+                .catch(error => {
+                    this.errors.push({
+                        file: task.file,
+                        error,
+                        timestamp: new Date()
+                    });
+                    task.reject(error);
 
-        let xhr = new XMLHttpRequest()
-        xhr.open('POST', uploadServer, true)
+                    // 触发错误回调
+                    if (this.onError) {
+                        this.onError(error, task.file);
+                    }
+                })
+                .finally(() => {
+                    this.running--;
+                    this.completed++;
+                    this._updateProgress();
 
-        xhr.onreadystatechange = function () {
-            console.log('upload state changed to ', xhr.readyState)
-            if (xhr.status == 200) {
-                location.reload()
+                    // 检查是否全部完成
+                    if (this.completed === this.total && this.running === 0) {
+                        this._onComplete();
+                    }
+
+                    this._next();
+                });
+
+            if (this.running < this.maxConcurrent || this.queue.length === 0) {
+                this._next();
             }
         }
 
-        xhr.send(fd)
-    }
-
-    function cancel() {
-        files = []
-        document.querySelector('#upload_box').style.display = 'none'
-    }
-
-    function getFileSize(srcLength) {
-        let units = ['B', 'KB', 'MB', 'GB']
-        var v = srcLength
-        var uIndex = 0
-        while (v > 1024 && uIndex < 3) {
-            uIndex++
-            v /= 1024
+        // 更新进度
+        _updateProgress() {
+            if (!this.running && !this.queue.length && !this.completed && !this.total) return
+            if (this.onProgress) {
+                this.onProgress({
+                    completed: this.completed,
+                    total: this.total,
+                    running: this.running,
+                    queued: this.queue.length,
+                    progress: this.total > 0 ? (this.completed / this.total) * 100 : 0
+                });
+            }
         }
-        return `${Math.round(v * 100) / 100} ${units[uIndex]}`
+
+        // 全部完成回调
+        _onComplete() {
+            if (this.onComplete) {
+                this.onComplete({
+                    results: this.results,
+                    errors: this.errors,
+                    total: this.total,
+                    completed: this.completed
+                });
+            }
+        }
+
+        // 设置并发数
+        setConcurrency(maxConcurrent) {
+            this.maxConcurrent = maxConcurrent;
+
+            // 如果并发数增加，立即启动更多任务
+            while (this.running < this.maxConcurrent && this.queue.length > 0) {
+                this._next();
+            }
+        }
+
+        // 获取队列状态
+        getStatus() {
+            return {
+                running: this.running,
+                queued: this.queue.length,
+                completed: this.completed,
+                total: this.total,
+                progress: this.total > 0 ? (this.completed / this.total) * 100 : 0,
+                results: this.results,
+                errors: this.errors
+            };
+        }
+
+        // 清理队列
+        clear() {
+            this.running = 0;
+            this.queue = [];
+            this.completed = 0;
+            this.total = 0;
+            this.results = [];
+            this.errors = [];
+        }
     }
 
-    function formatDate(v) {
-        var dt = new Date()
-        if (v instanceof Date)
-            dt = v
-        else if (v instanceof Number) {
-            dt = new Date(v)
-        }
-        let num_year = dt.getFullYear()
-        let num_month = dt.getMonth() + 1
-        let num_date = dt.getDate()
-        let num_hour = dt.getHours()
-        let num_min = dt.getMinutes()
-        let num_sec = dt.getSeconds()
+    class UploadManager {
 
-        return `${num_year}-${num_month < 10 ? '0' + num_month : num_month}-${num_date < 10 ? '0' + num_date : num_date} ${num_hour < 10 ? '0' + num_hour : num_hour}:${num_min < 10 ? '0' + num_min : num_min}:${num_sec < 10 ? '0' + num_sec : num_sec}`
+        constructor() {
+            this.uploadServer = './'
+            this.queue = new ConcurrentUploadQueue(2); // 默认并发数为2
+            this.setupEventListeners();
+            this.onComplete = null
+        }
+
+        // 文件上传函数
+        async simulateUpload(file, progressEle) {
+            return new Promise((resolve, reject) => {
+                let fd = new FormData()
+
+                fd.append(fileName, file)
+
+                let xhr = new XMLHttpRequest()
+
+                xhr.open('POST', this.uploadServer, true)
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.status == 200) {
+                        progressEle.innerText = `上传完毕`
+                        resolve(options)
+                    } else {
+                        progressEle.innerText = `上传失败`
+                        reject(options)
+                    }
+                }
+
+                // 下载进度
+                xhr.onprogress = (e) => {
+                    // 已上传/总大小 取两位小数
+                    const p = ((e.loaded / e.total) * 100).toFixed(2)
+                    progressEle.innerText = `上传中：${p}`
+                }
+                // 下载进度
+
+                xhr.send(fd)
+            });
+        }
+
+        // 添加文件到上传队列
+        addFiles(files) {
+            return new Promise(resolve => {
+                for (const item of files) {
+                    this.queue.addTask(
+                        this.simulateUpload.bind(this),
+                        item.file,
+                        item.progressEle
+                    ).then(result => {
+                        console.log(`文件 ${item.file.name} 上传成功:`, result);
+                    }).catch(error => {
+                        console.error(`文件 ${item.file.name} 上传失败:`, error);
+                    });
+                }
+                resolve()
+            })
+        }
+
+        // 设置事件监听
+        setupEventListeners() {
+            this.queue.onProgress = (progress) => {
+                this.updateProgressUI(progress);
+            };
+
+            this.queue.onComplete = (summary) => {
+                this.onComplete && this.onComplete(summary)
+            };
+
+            this.queue.onError = (error, file) => {
+                console.error(`上传错误: ${file.name}`, error);
+            };
+        }
+
+        // 更新UI进度
+        updateProgressUI(progress) {
+            const progressBox = document.getElementById('overview');
+
+            if (progressBox) {
+                progressBox.innerText =
+                    `进度: ${progress.completed}/${progress.total} | 运行中: ${progress.running} | 等待中: ${progress.queued}`;
+            }
+        }
+
+        // 改变并发数
+        changeConcurrency(value) {
+            this.queue.setConcurrency(value);
+            console.log(`并发数已改为: ${value}`);
+        }
+
+        // 清除任务
+        clear() {
+            this.queue.clear()
+            const progressBox = document.getElementById('overview')
+            if (progressBox) {
+                progressBox.innerText = ''
+            }
+        }
     }
 </script>

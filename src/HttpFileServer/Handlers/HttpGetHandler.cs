@@ -62,7 +62,7 @@ namespace HttpFileServer.Handlers
 
             var isPreview = url.Contains("preview=1");
 
-            var useJson = request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
+            var useJson = request.AcceptTypes != null && request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
             if (useJson && EnableJson)
             {
                 await ProcessJsonRequest(context);
@@ -77,7 +77,7 @@ namespace HttpFileServer.Handlers
             }
             else
             {
-                zipDownload = request.AcceptTypes.Any(p => p.Equals("application/zip", StringComparison.OrdinalIgnoreCase));
+                zipDownload = request.AcceptTypes != null && request.AcceptTypes.Any(p => p.Equals("application/zip", StringComparison.OrdinalIgnoreCase));
             }
 
             //预览时不触发下载/zip逻辑，直接正常响应内容
