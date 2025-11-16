@@ -23,15 +23,13 @@ namespace HttpFileServer.Utils
             StringBuilder sb = new StringBuilder();
             if (showParent)
             {
-                // 使用目录行模板渲染“上一级”按钮，结构与目录一致
-                var parentRow = HtmlResource.TableRowDirTemplate
-                    .Replace("./${file.name}/", "../")
-                    .Replace("${file.name}", "上一级")
-                    .Replace("${file.size}", "--")
-                    .Replace("${file.modified}", "--")
-                    .Replace("${file.type}", "目录");
-
-                sb.AppendLine(parentRow);
+                // 渲染“上一级”目录行，不包含打包下载按钮
+                sb.AppendLine("<tr class=\"hover:bg-gray-50 transition-colors\">" +
+                              "<td class=\"px-6 py-4 whitespace-nowrap\"><div class=\"flex items-center\"><a href=\"../\"><i class=\"icon dir mr-1\"></i><span class=\"text-sm text-gray-900 text-ellipsis\">..</span></a></div></td>" +
+                              "<td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500\">--</td>" +
+                              "<td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500\">--</td>" +
+                              "<td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500\">上一级</td>" +
+                              "<td class=\"px-6 py-4 whitespace-nowrap text-sm font-medium\"></td></tr>");
                 index++;
             }
             foreach (var dir in dirs)
@@ -70,6 +68,7 @@ namespace HttpFileServer.Utils
             content = content.Replace("{{footer}}", footerContent);
             content = content.Replace("{{uploadSection}}", enableUpload ? HtmlResource.UploadSection : "");
             content = content.Replace("{{tableRows}}", sb.ToString());
+            content = content.Replace("{{tailwindcss}}", HtmlResource.tailwindcss_3_4_17);
             return content;
         }
 

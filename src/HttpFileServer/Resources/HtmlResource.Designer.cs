@@ -82,13 +82,14 @@ namespace HttpFileServer.Resources {
         ///   查找类似 &lt;tr class=&quot;hover:bg-gray-50 transition-colors&quot;&gt;
         ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap&quot;&gt;
         ///        &lt;div class=&quot;flex items-center&quot;&gt;
-        ///            &lt;i class=&quot;icon dir mr-1&quot;&gt;&lt;/i&gt;
-        ///            &lt;span class=&quot;text-sm text-gray-900 text-ellipsis&quot;&gt;${file.name}&lt;/span&gt;
+        ///            &lt;a href=&quot;./${file.name}/&quot;&gt;
+        ///                &lt;i class=&quot;icon dir mr-1&quot;&gt;&lt;/i&gt;
+        ///                &lt;span class=&quot;text-sm text-gray-900 text-ellipsis&quot;&gt;${file.name}&lt;/span&gt;
+        ///            &lt;/a&gt;
         ///        &lt;/div&gt;
         ///    &lt;/td&gt;
         ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.size}&lt;/td&gt;
-        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.modified}&lt;/td&gt;
-        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-s [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string TableRowDirTemplate {
             get {
@@ -97,20 +98,29 @@ namespace HttpFileServer.Resources {
         }
         
         /// <summary>
-        ///   查找类似 &lt;tr class=&quot;hover:bg-gray-50 transition-colors&quot;&gt;
+        ///   查找类似 &lt;tr class=&quot;hover:bg-gray-50 transition-colors&quot; onmouseenter=&quot;startPreviewTimer(event, &apos;${file.name}&apos;, &apos;${file.type}&apos;)&quot; onmouseleave=&quot;cancelPreviewTimer()&quot;&gt;
         ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap&quot;&gt;
         ///        &lt;div class=&quot;flex items-center&quot;&gt;
-        ///            &lt;i class=&quot;icon file mr-1&quot;&gt;&lt;/i&gt;
-        ///            &lt;span class=&quot;text-sm text-gray-900 text-ellipsis&quot;&gt;${file.name}&lt;/span&gt;
+        ///            &lt;a href=&quot;./${file.name}&quot;&gt;
+        ///                &lt;i class=&quot;icon file mr-1&quot;&gt;&lt;/i&gt;
+        ///                &lt;span class=&quot;text-sm text-gray-900 text-ellipsis&quot;&gt;${file.name}&lt;/span&gt;
+        ///            &lt;/a&gt;
         ///        &lt;/div&gt;
         ///    &lt;/td&gt;
-        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.size}&lt;/td&gt;
-        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.modified}&lt;/td&gt;
-        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text- [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-s [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string TableRowFileTemplate {
             get {
                 return ResourceManager.GetString("TableRowFileTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 (()=&gt;{var qv=Object.create;var Hi=Object.defineProperty;var $v=Object.getOwnPropertyDescriptor;var Lv=Object.getOwnPropertyNames;var Mv=Object.getPrototypeOf,Nv=Object.prototype.hasOwnProperty;var df=r=&gt;Hi(r,&quot;__esModule&quot;,{value:!0});var hf=r=&gt;{if(typeof require!=&quot;undefined&quot;)return require(r);throw new Error(&apos;Dynamic require of &quot;&apos;+r+&apos;&quot; is not supported&apos;)};var P=(r,e)=&gt;()=&gt;(r&amp;&amp;(e=r(r=0)),e);var x=(r,e)=&gt;()=&gt;(e||r((e={exports:{}}).exports,e),e.exports),Ge=(r,e)=&gt;{df(r);for(var t in e)Hi(r,t,{get:e[t],enumerabl [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        /// </summary>
+        internal static string tailwindcss_3_4_17 {
+            get {
+                return ResourceManager.GetString("tailwindcss.3.4.17", resourceCulture);
             }
         }
         

@@ -123,6 +123,7 @@
     <Compile Include="Core\IFileServer.cs" />
     <Compile Include="Core\PathInfo.cs" />
     <Compile Include="Core\ServerStatus.cs" />
+    <Compile Include="Handlers\FileInfoApiHandler.cs" />
     <Compile Include="Handlers\HttpGetHandler.cs" />
     <Compile Include="Handlers\HttpHandlerBase.cs" />
     <Compile Include="Handlers\HttpHeadHandler.cs" />
@@ -193,6 +194,7 @@
     <None Include="Properties\app.manifest">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="Resources\tailwindcss.3.4.17.js" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
