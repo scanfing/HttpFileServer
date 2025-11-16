@@ -15,14 +15,23 @@ http server for browse directory and download / upload files
 
 ### 截图
 
-程序界面
-![主程序界面](images/main.png)
+程序界面（浅色）
+![主程序界面 - Light](images/main.png)
 
-网页界面
-![网页界面](images/web.png)
+程序界面（暗色）
+![主程序界面 - Dark](images/main_dark.png)
 
-上传界面
-![网页上传界面](images/web_upload.png)
+网页界面（浅色）
+![网页界面 - Light](images/web.png)
+
+网页界面（暗色）
+![网页界面 - Dark](images/web_dark.png)
+
+上传界面（浅色）
+![网页上传界面 - Light](images/web_upload.png)
+
+上传界面（暗色）
+![网页上传界面 - Dark](images/web_upload_dark.png)
 
 JSON响应
 ![JSON响应界面](images/json_response.png)
@@ -35,6 +44,8 @@ JSON响应
 - 支持断点续传（Range 请求）。
 - 支持文件上传（multipart/form-data），但在默认配置中上传功能是关闭的，可在界面中开启。
 - 提供简单的防火墙辅助方法，可以在 Windows 上尝试添加防火墙例外端口或应用程序（程序会调用系统 COM 接口）。
+
+- 支持界面主题（Light / Dark / System）。程序会根据系统主题自动选择，也可在主界面手动切换主题，当前主题会保存到配置中以便下次启动保持。暗色主题的截图已包含在文档中。
 
 ## 主要使用说明
 
