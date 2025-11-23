@@ -13,6 +13,7 @@ using HttpFileServer.Models;
 using HttpFileServer.Servers;
 using HttpFileServer.Services;
 using HttpFileServer.Utils;
+using HttpFileServer.Views;
 
 namespace HttpFileServer.ViewModels
 {
@@ -24,7 +25,7 @@ namespace HttpFileServer.ViewModels
         private Config _config;
         private bool _enableUpload = false;
         private bool _isRunning = false;
-        private ushort _listenPort =80;
+        private ushort _listenPort = 80;
         private string _logContent = string.Empty;
         private string _sourceDir;
         private ServerStatus _status = ServerStatus.Ready;
@@ -55,9 +56,35 @@ namespace HttpFileServer.ViewModels
 
         #region Properties
 
+        private bool _autoStartOnLaunch = false;
+        private bool _autoStartWithSystem = false;
+
+        private bool _MinimizeToTrayAfterAutoStart = true;
+
+        public bool AutoStartOnLaunch
+        {
+            get => _autoStartOnLaunch;
+            set => SetProperty(ref _autoStartOnLaunch, value);
+        }
+
+        public bool AutoStartWithSystem
+        {
+            get => _autoStartWithSystem;
+            set
+            {
+                if (SetProperty(ref _autoStartWithSystem, value))
+                {
+                    AutoStartHelper.SetAutoStart(value);
+                }
+            }
+        }
+
         public CommandImpl CommandStartServer { get; private set; }
+
         public CommandImpl CommandStopServer { get; private set; }
+
         public CommandImpl CommandToggleTheme { get; private set; }
+
         public Dispatcher Dispatcher { get; set; }
 
         public bool EnableUpload
@@ -84,6 +111,12 @@ namespace HttpFileServer.ViewModels
         {
             get => _logContent;
             private set => SetProperty(ref _logContent, value);
+        }
+
+        public bool MinimizeToTrayAfterAutoStart
+        {
+            get => _MinimizeToTrayAfterAutoStart;
+            set => SetProperty(ref _MinimizeToTrayAfterAutoStart, value);
         }
 
         public ObservableCollection<RequestModel> RequestModels { get; private set; }
@@ -127,9 +160,23 @@ namespace HttpFileServer.ViewModels
             SourceDir = cfg.RootDir;
             ListenPort = cfg.Port;
             EnableUpload = cfg.EnableUpload;
+            AutoStartOnLaunch = cfg.AutoStartOnLaunch;
+            AutoStartWithSystem = cfg.AutoStartWithSystem;
+            MinimizeToTrayAfterAutoStart = cfg.MinimizeToTrayAfterAutoStart;
+
             // 加载保存的主题模式
             if (!string.IsNullOrWhiteSpace(cfg.ThemeMode)) ThemeMode = cfg.ThemeMode; else ThemeMode = DetectSystemTheme();
             ApplyThemeResources();
+
+            if (AutoStartHelper.IsProcessRunWithAutoStart() && _config.MinimizeToTrayAfterAutoStart)
+            {
+                var shell = sender as ShellView;
+                shell.WindowState = WindowState.Minimized;
+            }
+            if ((AutoStartHelper.IsProcessRunWithAutoStart() && _config.AutoStartWithSystem) || _config.AutoStartOnLaunch)
+            {
+                OnRequestStartServer();
+            }
 
             Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
         }
@@ -143,9 +190,35 @@ namespace HttpFileServer.ViewModels
             _config.Port = (ushort)ListenPort;
             _config.EnableUpload = EnableUpload;
             _config.ThemeMode = ThemeMode; // 保存当前主题模式
+            _config.AutoStartOnLaunch = AutoStartOnLaunch;
+            _config.AutoStartWithSystem = AutoStartWithSystem;
+            _config.MinimizeToTrayAfterAutoStart = MinimizeToTrayAfterAutoStart;
+
             _cfgSrv.SaveConfig(_config);
 
             base.OnViewUnLoaded(sender);
+        }
+
+        private void ApplyThemeResources()
+        {
+            var dict = GetWindowResources();
+            string mode = ThemeMode == "System" ? DetectSystemTheme() : ThemeMode;
+            if (mode == "Dark")
+            {
+                dict["WindowBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0x1E, 0x1E, 0x1E));
+                dict["WindowForegroundBrush"] = new SolidColorBrush(Colors.WhiteSmoke);
+                dict["PanelBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0x2A, 0x2A, 0x2A));
+                dict["PanelBorderBrush"] = new SolidColorBrush(Color.FromRgb(0x44, 0x44, 0x44));
+                dict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
+            }
+            else // Light
+            {
+                dict["WindowBackgroundBrush"] = new SolidColorBrush(Colors.White);
+                dict["WindowForegroundBrush"] = new SolidColorBrush(Color.FromRgb(0x11, 0x11, 0x11));
+                dict["PanelBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0xF5, 0xF5, 0xF5));
+                dict["PanelBorderBrush"] = new SolidColorBrush(Color.FromRgb(0xDD, 0xDD, 0xDD));
+                dict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
+            }
         }
 
         private bool CanStartServer()
@@ -156,6 +229,14 @@ namespace HttpFileServer.ViewModels
         private bool CanStopServer()
         {
             return IsRunning;
+        }
+
+        private string DetectSystemTheme()
+        {
+            // 简单使用系统窗口颜色亮度判断
+            var col = SystemParameters.WindowGlassColor; // Win7+ Aero色
+            var brightness = (col.R * 299 + col.G * 587 + col.B * 114) / 1000;
+            return brightness < 128 ? "Dark" : "Light";
         }
 
         private void Dispatcher_ShutdownStarted(object sender, EventArgs e)
@@ -182,6 +263,16 @@ namespace HttpFileServer.ViewModels
             {
                 RequestModels.Remove(e);
             });
+        }
+
+        private ResourceDictionary GetWindowResources()
+        {
+            foreach (Window w in Application.Current.Windows)
+            {
+                if (w.DataContext == this)
+                    return w.Resources; // 当前窗口资源
+            }
+            return Application.Current.Resources; //退回应用级
         }
 
         private void OnRequestStartServer()
@@ -226,24 +317,6 @@ namespace HttpFileServer.ViewModels
             CommandStopServer?.RaiseCanExecuteChanged();
         }
 
-        private ResourceDictionary GetWindowResources()
-        {
-            foreach (Window w in Application.Current.Windows)
-            {
-                if (w.DataContext == this)
-                    return w.Resources; // 当前窗口资源
-            }
-            return Application.Current.Resources; //退回应用级
-        }
-
-        private string DetectSystemTheme()
-        {
-            // 简单使用系统窗口颜色亮度判断
-            var col = SystemParameters.WindowGlassColor; // Win7+ Aero色
-            var brightness = (col.R *299 + col.G *587 + col.B *114) /1000;
-            return brightness <128 ? "Dark" : "Light";
-        }
-
         private void OnToggleTheme()
         {
             if (ThemeMode == "Light") ThemeMode = "Dark";
@@ -253,28 +326,6 @@ namespace HttpFileServer.ViewModels
             // 实时保存配置
             _config.ThemeMode = ThemeMode;
             _cfgSrv.SaveConfig(_config);
-        }
-
-        private void ApplyThemeResources()
-        {
-            var dict = GetWindowResources();
-            string mode = ThemeMode == "System" ? DetectSystemTheme() : ThemeMode;
-            if (mode == "Dark")
-            {
-                dict["WindowBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0x1E,0x1E,0x1E));
-                dict["WindowForegroundBrush"] = new SolidColorBrush(Colors.WhiteSmoke);
-                dict["PanelBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0x2A,0x2A,0x2A));
-                dict["PanelBorderBrush"] = new SolidColorBrush(Color.FromRgb(0x44,0x44,0x44));
-                dict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x3B,0x82,0xF6));
-            }
-            else // Light
-            {
-                dict["WindowBackgroundBrush"] = new SolidColorBrush(Colors.White);
-                dict["WindowForegroundBrush"] = new SolidColorBrush(Color.FromRgb(0x11,0x11,0x11));
-                dict["PanelBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0xF5,0xF5,0xF5));
-                dict["PanelBorderBrush"] = new SolidColorBrush(Color.FromRgb(0xDD,0xDD,0xDD));
-                dict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x3B,0x82,0xF6));
-            }
         }
 
         #endregion Methods

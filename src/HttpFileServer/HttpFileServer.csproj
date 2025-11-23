@@ -146,6 +146,7 @@
     </Compile>
     <Compile Include="Servers\HttpFileServerBase.cs" />
     <Compile Include="Services\JsonService.cs" />
+    <Compile Include="Utils\AutoStartHelper.cs" />
     <Compile Include="Utils\PathInfoExtension.cs" />
     <Compile Include="Web\HttpListenerRequestExtensions.cs" />
     <Compile Include="Handlers\HttpPostHandler.cs" />

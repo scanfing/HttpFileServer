@@ -10,11 +10,35 @@ namespace HttpFileServer.Core
     {
         #region Properties
 
+        /// <summary>
+        /// 启动程序后自动开启服务（手动）
+        /// </summary>
+        public bool AutoStartOnLaunch { get; set; } = false;
+
+        /// <summary>
+        /// 开机自启动并启动服务
+        /// </summary>
+        public bool AutoStartWithSystem { get; set; } = false;
+
         public bool EnableUpload { get; set; } = false;
+
+        /// <summary>
+        /// 开机自启动后最小化到托盘
+        /// </summary>
+        public bool MinimizeToTrayAfterAutoStart { get; set; } = true;
+
+        /// <summary>
+        /// HTTP 服务端口
+        /// </summary>
         public ushort Port { get; set; } = 80;
+
         public List<string> RecentDirs { get; set; }
+
         public string RootDir { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        // 新增主题模式保存 (Light / Dark / System)
+
+        /// <summary>
+        /// 主题模式 (Light / Dark / System)
+        /// </summary>
         public string ThemeMode { get; set; } = "System";
 
         #endregion Properties
