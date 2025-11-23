@@ -34,10 +34,8 @@ namespace HttpFileServer.Utils
             try
             {
                 regKey = Registry.CurrentUser.CreateSubKey(AutoRunRegPath);
-                if (string.IsNullOrEmpty(exePath))
-                {
-                    regKey?.DeleteValue("HttpFileServer", false);
-                }
+                regKey?.DeleteValue("HttpFileServer", false);
+
                 if (autoStart)
                 {
                     regKey?.SetValue("HttpFileServer", exePath);
