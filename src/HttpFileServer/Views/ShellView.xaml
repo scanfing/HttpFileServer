@@ -169,6 +169,30 @@
                     Text="{Binding ThemeMode, Mode=OneWay}" />
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <CheckBox
+                        x:Name="ckAutoStart"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Content="开机自启动"
+                        IsChecked="{Binding AutoStartWithSystem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        IsEnabled="{Binding IsRunning, Converter={StaticResource boolReverse}}"
+                        ToolTip="开机后是否自动启动程序和服务" />
+                    <CheckBox
+                        x:Name="ckAutoStartWithMin"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Content="最小化"
+                        IsChecked="{Binding MinimizeToTrayAfterAutoStart, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        IsEnabled="{Binding ElementName=ckAutoStart, Path=IsChecked}"
+                        ToolTip="自启动后是否最小化窗口" />
+                    <CheckBox
+                        x:Name="ckAutoStartOnLaunch"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Content="自启动服务"
+                        IsChecked="{Binding AutoStartOnLaunch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        IsEnabled="{Binding IsRunning, Converter={StaticResource boolReverse}}"
+                        ToolTip="手动启动程序后，是否自动启动服务" />
+                    <CheckBox
                         x:Name="ckAllowUpload"
                         Margin="5,0"
                         VerticalAlignment="Center"
