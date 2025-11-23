@@ -19,7 +19,7 @@ namespace HttpFileServer.Utils
                 IPHostEntry IpEntry = Dns.GetHostEntry(HostName);
                 foreach (var ip in IpEntry.AddressList)
                 {
-                    if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    if (ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6)
                     {
                         lst.Add(ip);
                     }

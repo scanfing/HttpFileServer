@@ -293,8 +293,16 @@ namespace HttpFileServer.ViewModels
             var ips = IPHelper.GetAllLocalIP();
             foreach (var ip in ips)
             {
-                LogContent += $"http://{ip}:{ListenPort}/{Environment.NewLine}";
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    LogContent += $"http://{ip}:{ListenPort}/{Environment.NewLine}";
+                }
+                else if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                {
+                    LogContent += $"http://[{ip}]:{ListenPort}/{Environment.NewLine}";
+                }
             }
+
             IsRunning = true;
             Status = ServerStatus.Running;
             CommandStartServer?.RaiseCanExecuteChanged();
