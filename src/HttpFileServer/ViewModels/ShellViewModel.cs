@@ -24,6 +24,7 @@ namespace HttpFileServer.ViewModels
         private ConfigService _cfgSrv;
         private Config _config;
         private bool _enableUpload = false;
+        private bool _useWebServer = false;
         private bool _isRunning = false;
         private ushort _listenPort = 80;
         private string _logContent = string.Empty;
@@ -93,6 +94,12 @@ namespace HttpFileServer.ViewModels
             set => SetProperty(ref _enableUpload, value);
         }
 
+        public bool UseWebServer
+        {
+            get => _useWebServer;
+            set => SetProperty(ref _useWebServer, value);
+        }
+
         public IFileServer FileServer { get; private set; }
 
         public bool IsRunning
@@ -160,6 +167,7 @@ namespace HttpFileServer.ViewModels
             SourceDir = cfg.RootDir;
             ListenPort = cfg.Port;
             EnableUpload = cfg.EnableUpload;
+            UseWebServer = cfg.UseWebServer;
             AutoStartOnLaunch = cfg.AutoStartOnLaunch;
             AutoStartWithSystem = cfg.AutoStartWithSystem;
             MinimizeToTrayAfterAutoStart = cfg.MinimizeToTrayAfterAutoStart;
@@ -189,6 +197,7 @@ namespace HttpFileServer.ViewModels
             _config.RootDir = SourceDir;
             _config.Port = (ushort)ListenPort;
             _config.EnableUpload = EnableUpload;
+            _config.UseWebServer = UseWebServer;
             _config.ThemeMode = ThemeMode; // 保存当前主题模式
             _config.AutoStartOnLaunch = AutoStartOnLaunch;
             _config.AutoStartWithSystem = AutoStartWithSystem;
@@ -282,7 +291,10 @@ namespace HttpFileServer.ViewModels
 
             Directory.CreateDirectory(SourceDir);
 
-            FileServer = new DefaultFileServer(ListenPort, SourceDir, true, EnableUpload); // 始终启用JSON
+            if (UseWebServer)
+                FileServer = new StaticWebHostServer(ListenPort, SourceDir, true, EnableUpload);
+            else
+                FileServer = new DefaultFileServer(ListenPort, SourceDir, true, EnableUpload); // 始终启用JSON
 
             FileServer.LogGenerated += FileServer_LogGenerated;
             FileServer.NewReqeustIn += FileServer_NewReqeustIn;

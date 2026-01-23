@@ -306,12 +306,13 @@ namespace HttpFileServer.Handlers
         /// <param name="path"></param>
         /// <param name="request"></param>
         /// <param name="response"></param>
+        /// <param name="useRealMineType">响应头使用真实minetype</param>
         /// <returns></returns>
-        protected async Task ResponseContentFull(string path, HttpListenerRequest request, HttpListenerResponse response, bool onlyHead = false, bool isPreview = false)
+        protected async Task ResponseContentFull(string path, HttpListenerRequest request, HttpListenerResponse response, bool onlyHead = false, bool useRealMineType = false)
         {
             var tp = await GetResponseContentTypeAndStream(path);
             //预览时只设置Content-Type，不设置Content-Disposition
-            if (isPreview)
+            if (useRealMineType)
             {
                 response.ContentType = GetMimeType(path);
             }

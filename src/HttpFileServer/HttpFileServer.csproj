@@ -129,6 +129,8 @@
     <Compile Include="Handlers\HttpHeadHandler.cs" />
     <Compile Include="Handlers\HttpPostFileHandler.cs" />
     <Compile Include="Handlers\IHttpHandler.cs" />
+    <Compile Include="Handlers\WebHostGetHandler.cs" />
+    <Compile Include="Handlers\WebHostHeadHandler.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -145,6 +147,7 @@
       <DependentUpon>HtmlResource.resx</DependentUpon>
     </Compile>
     <Compile Include="Servers\HttpFileServerBase.cs" />
+    <Compile Include="Servers\WebHostServer.cs" />
     <Compile Include="Services\JsonService.cs" />
     <Compile Include="Utils\AutoStartHelper.cs" />
     <Compile Include="Utils\PathInfoExtension.cs" />

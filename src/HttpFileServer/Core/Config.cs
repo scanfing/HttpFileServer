@@ -41,6 +41,11 @@ namespace HttpFileServer.Core
         /// </summary>
         public string ThemeMode { get; set; } = "System";
 
+        /// <summary>
+        /// 是否以静态 Web 服务器模式运行（优先返回 index.html、使用真实 MIME）
+        /// </summary>
+        public bool UseWebServer { get; set; } = false;
+
         #endregion Properties
     }
 }

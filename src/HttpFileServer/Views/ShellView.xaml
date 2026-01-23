@@ -27,6 +27,13 @@
         <!--  初始主题色（浅色），ViewModel 动态替换  -->
         <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="WindowForegroundBrush" Color="#111111" />
+        <!--  Ensure labels follow the current theme foreground for readability in dark mode  -->
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="{DynamicResource WindowForegroundBrush}" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{DynamicResource WindowForegroundBrush}" />
+        </Style>
         <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#F5F5F5" />
         <SolidColorBrush x:Key="PanelBorderBrush" Color="#DDDDDD" />
         <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6" />
@@ -172,7 +179,7 @@
                         x:Name="ckAutoStart"
                         Margin="5,0"
                         VerticalAlignment="Center"
-                        Content="开机自启动"
+                        Content="开机自启"
                         IsChecked="{Binding AutoStartWithSystem, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         IsEnabled="{Binding IsRunning, Converter={StaticResource boolReverse}}"
                         ToolTip="开机后是否自动启动程序和服务" />
@@ -188,7 +195,7 @@
                         x:Name="ckAutoStartOnLaunch"
                         Margin="5,0"
                         VerticalAlignment="Center"
-                        Content="自启动服务"
+                        Content="服务自启"
                         IsChecked="{Binding AutoStartOnLaunch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         IsEnabled="{Binding IsRunning, Converter={StaticResource boolReverse}}"
                         ToolTip="手动启动程序后，是否自动启动服务" />
@@ -199,6 +206,14 @@
                         Content="允许上传"
                         IsChecked="{Binding EnableUpload, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         IsEnabled="{Binding IsRunning, Converter={StaticResource boolReverse}}" />
+                    <CheckBox
+                        x:Name="ckWebMode"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        Content="静态Web"
+                        IsChecked="{Binding UseWebServer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        IsEnabled="{Binding IsRunning, Converter={StaticResource boolReverse}}"
+                        ToolTip="启用后以静态 Web 服务器模式运行（优先返回 index.html、使用真实 MIME 类型）" />
                 </StackPanel>
                 <WrapPanel Grid.Column="2">
                     <Button

@@ -21,12 +21,14 @@ namespace HttpFileServer.Servers
     {
         #region Fields
 
-        private CacheService _cacheSrv;
+        protected CacheService _cacheSrv;
 
-        private bool _enableJson;
-        private CacheService _jsonCacheSrv;
-        private JsonService _jsonService;
-        private string _rootDir;
+        protected bool _enableJson;
+        protected CacheService _jsonCacheSrv;
+        protected JsonService _jsonService;
+        protected string _rootDir;
+
+        protected bool _runAsWebHostServer;
 
         #endregion Fields
 
@@ -47,7 +49,7 @@ namespace HttpFileServer.Servers
 
         #region Methods
 
-        protected void InitHandler()
+        protected virtual void InitHandler()
         {
             RegisterHandler("HEAD", new HttpHeadHandler(_rootDir, _cacheSrv, _jsonCacheSrv, _jsonService));
 
