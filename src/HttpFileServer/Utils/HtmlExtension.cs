@@ -125,27 +125,6 @@ namespace HttpFileServer.Utils
             content = content.Replace("{{uploadSection}}", enableUpload ? uploadSection : "");
             content = content.Replace("{{tableRows}}", sb.ToString());
 
-            // qrcode and tailwind: allow overriding from debug resource dir
-            string qrcodeJs = HtmlResource.qrcode_min;
-            string tailwindJs = HtmlResource.tailwindcss_3_4_17;
-            try
-            {
-                var qrcodePath = string.IsNullOrWhiteSpace(debugResourceDir) ? null : Path.Combine(debugResourceDir, "qrcode.min.js");
-                if (!string.IsNullOrWhiteSpace(qrcodePath) && File.Exists(qrcodePath))
-                    qrcodeJs = File.ReadAllText(qrcodePath, Encoding.UTF8);
-            }
-            catch { }
-            try
-            {
-                var tailwindPath = string.IsNullOrWhiteSpace(debugResourceDir) ? null : Path.Combine(debugResourceDir, "tailwindcss.3.4.17.js");
-                if (!string.IsNullOrWhiteSpace(tailwindPath) && File.Exists(tailwindPath))
-                    tailwindJs = File.ReadAllText(tailwindPath, Encoding.UTF8);
-            }
-            catch { }
-
-            content = content.Replace("{{qrcodejs}}", qrcodeJs);
-            content = content.Replace("{{tailwindcss}}", tailwindJs);
-
             // Final pass: replace any remaining {{key}} placeholders from known values (case-insensitive).
             try
             {
@@ -157,8 +136,6 @@ namespace HttpFileServer.Utils
                     ["footer"] = footerContent,
                     ["uploadSection"] = enableUpload ? uploadSection : "",
                     ["tableRows"] = sb.ToString(),
-                    ["qrcodejs"] = qrcodeJs,
-                    ["tailwindcss"] = tailwindJs
                 };
 
                 content = Regex.Replace(content, "\\{\\{\\s*(.*?)\\s*\\}\\}", m =>
