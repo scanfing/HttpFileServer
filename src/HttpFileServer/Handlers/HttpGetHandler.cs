@@ -72,7 +72,8 @@ namespace HttpFileServer.Handlers
             }
 
             var useJson = request.AcceptTypes != null && request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
-            if (useJson && EnableJson)
+            // JSON responses are always enabled when the client requests application/json
+            if (useJson)
             {
                 await ProcessJsonRequest(context);
                 return;
