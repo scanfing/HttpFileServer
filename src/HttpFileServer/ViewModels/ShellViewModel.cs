@@ -299,7 +299,11 @@ namespace HttpFileServer.ViewModels
                 }
                 else if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
                 {
-                    LogContent += $"http://[{ip}]:{ListenPort}/{Environment.NewLine}";
+                    var ipstr = ip.ToString();
+                    if (ipstr.Contains("%"))
+                        ipstr = ipstr.Substring(0, ipstr.IndexOf("%"));
+
+                    LogContent += $"http://[{ipstr}]:{ListenPort}/{Environment.NewLine}";
                 }
             }
 
