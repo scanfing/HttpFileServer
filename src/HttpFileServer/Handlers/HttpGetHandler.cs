@@ -13,6 +13,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using HttpFileServer.Resources;
 
 namespace HttpFileServer.Handlers
 {
@@ -54,6 +55,14 @@ namespace HttpFileServer.Handlers
             var url = request.Url.ToString();
             var localPath = request.Url.LocalPath;
 
+            // If query indicates resource, delegate to ProcessResourceRequest
+            var resourceQuery = request.QueryString.Get("type");
+            if ("resource".Equals(resourceQuery, StringComparison.OrdinalIgnoreCase))
+            {
+                await ProcessResourceRequest(context);
+                return;
+            }
+
             // 增加特殊路径和空路径过滤，防止异常
             if (string.IsNullOrWhiteSpace(localPath))
             {
@@ -62,12 +71,20 @@ namespace HttpFileServer.Handlers
                 return;
             }
 
-            var isPreview = url.Contains("preview=1");
-
             var useJson = request.AcceptTypes != null && request.AcceptTypes.Any(p => p.Equals("application/json", StringComparison.OrdinalIgnoreCase));
             if (useJson && EnableJson)
             {
                 await ProcessJsonRequest(context);
+                return;
+            }
+
+            var isPreview = url.Contains("preview=1");
+            //预览时不触发下载/zip逻辑，直接正常响应内容
+            if (isPreview)
+            {
+                var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
+                var dstpath = tmp.Replace('/', '\\');
+                await ResponseContentFull(dstpath, request, response, false, true);
                 return;
             }
 
@@ -80,15 +97,6 @@ namespace HttpFileServer.Handlers
             else
             {
                 zipDownload = request.AcceptTypes != null && request.AcceptTypes.Any(p => p.Equals("application/zip", StringComparison.OrdinalIgnoreCase));
-            }
-
-            //预览时不触发下载/zip逻辑，直接正常响应内容
-            if (isPreview)
-            {
-                var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
-                var dstpath = tmp.Replace('/', '\\');
-                await ResponseContentFull(dstpath, request, response, false, true);
-                return;
             }
 
             if (zipDownload)
@@ -136,6 +144,110 @@ namespace HttpFileServer.Handlers
                     await ResponseContentPartial(dstpath2, request, response);
                 else
                     await ResponseContentFull(dstpath2, request, response);
+            }
+        }
+
+        public virtual async Task ProcessResourceRequest(HttpListenerContext context)
+        {
+            var request = context.Request;
+            var response = context.Response;
+
+            var rel = request.Url.LocalPath.TrimStart('/');
+            var useDebugResourceDirFlag = !string.IsNullOrWhiteSpace(_debugResourceDir) && Directory.Exists(_debugResourceDir);
+            if (useDebugResourceDirFlag)
+            {
+                try
+                {
+                    var debugPath = Path.Combine(_debugResourceDir, rel.Replace('/', '\\'));
+                    if (File.Exists(debugPath))
+                    {
+                        await ResponseContentFull(debugPath, request, response, false, true);
+                        return;
+                    }
+                }
+                catch { }
+            }
+
+            var filename = Path.GetFileName(rel ?? "");
+            var ext = Path.GetExtension(filename);
+            string content = null;
+            byte[] contentBytes = null;
+            string contentType = "application/octet-stream";
+
+            try
+            {
+                // Try a set of candidate resource keys via ResourceManager. Prefer raw objects (byte[]) then strings.
+                var candidates = new[] {
+                    Path.GetFileNameWithoutExtension(filename),
+                    filename,
+                    Path.GetFileNameWithoutExtension(filename)?.Replace('.', '_')
+                };
+
+                foreach (var key in candidates.Where(k => !string.IsNullOrWhiteSpace(k)).Distinct(StringComparer.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var obj = HtmlResource.ResourceManager.GetObject(key);
+                        if (obj is byte[] b)
+                        {
+                            contentBytes = b;
+                            break;
+                        }
+                        if (obj is System.IO.MemoryStream ms)
+                        {
+                            contentBytes = ms.ToArray();
+                            break;
+                        }
+
+                        var str = HtmlResource.ResourceManager.GetString(key);
+                        if (!string.IsNullOrWhiteSpace(str))
+                        {
+                            content = str;
+                            break;
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+
+            if (content == null && contentBytes == null)
+            {
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                return;
+            }
+
+            // Determine content type from filename extension when possible
+            try
+            {
+                contentType = GetMimeType(filename ?? rel);
+            }
+            catch { }
+
+            try
+            {
+                if (contentBytes != null)
+                {
+                    response.ContentType = contentType;
+                    response.ContentLength64 = contentBytes.LongLength;
+                    await response.OutputStream.WriteAsync(contentBytes, 0, contentBytes.Length);
+                    await response.OutputStream.FlushAsync();
+                    response.StatusCode = (int)HttpStatusCode.OK;
+                }
+                else
+                {
+                    var buff = Encoding.UTF8.GetBytes(content);
+                    response.ContentEncoding = Encoding.UTF8;
+                    response.ContentType = contentType;
+                    response.ContentLength64 = buff.LongLength;
+                    await response.OutputStream.WriteAsync(buff, 0, buff.Length);
+                    await response.OutputStream.FlushAsync();
+                    response.StatusCode = (int)HttpStatusCode.OK;
+                }
+            }
+            catch (Exception)
+            {
+                response.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
         }
 

@@ -27,6 +27,14 @@ namespace HttpFileServer.Handlers
             var request = context.Request;
             var response = context.Response;
 
+            // If request explicitly asks for resource, delegate to base so embedded/debug resources are served.
+            var resourceQuery = request.QueryString.Get("type");
+            if ("resource".Equals(resourceQuery, StringComparison.OrdinalIgnoreCase))
+            {
+                await base.ProcessRequest(context);
+                return;
+            }
+
             // If URL maps to a directory, prefer serving index.html inside it
             var tmp = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
             var dstpath = tmp.Replace('/', '\\');

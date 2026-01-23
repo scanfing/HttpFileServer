@@ -61,6 +61,39 @@ namespace HttpFileServer.Resources {
         }
         
         /// <summary>
+        ///   查找类似 :root {
+        ///    --bg: #f9fafb;
+        ///    --panel-bg: #ffffff;
+        ///    --panel-border: #e5e7eb;
+        ///    --text: #111827;
+        ///    --text-secondary: #6b7280;
+        ///    --accent: #2563eb;
+        ///    --accent-hover: #1d4ed8;
+        ///    --popover-bg: #ffffff;
+        ///}
+        ///
+        ///[data-theme=&apos;dark&apos;] {
+        ///    --bg: #0f172a;
+        ///    --panel-bg: #1e293b;
+        ///    --panel-border: #334155;
+        ///    --text: #f1f5f9;
+        ///    --text-secondary: #94a3b8;
+        ///    --accent: #3b82f6;
+        ///    --accent-hover: #60a5fa;
+        ///    --popover-bg: #1e293b;
+        ///}
+        ///
+        ///body {
+        ///    background: var(--bg);
+        ///    color: [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        /// </summary>
+        internal static string appstyle {
+            get {
+                return ResourceManager.GetString("appstyle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 &lt;!DOCTYPE html&gt;
         ///&lt;html lang=&quot;zh-CN&quot; data-theme=&quot;light&quot;&gt;
         ///
@@ -68,17 +101,15 @@ namespace HttpFileServer.Resources {
         ///    &lt;meta charset=&quot;UTF-8&quot;&gt;
         ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
         ///    &lt;title&gt;HttpFileServer&lt;/title&gt;
-        ///    &lt;script&gt;{{qrcodejs}}&lt;/script&gt;
-        ///    &lt;script&gt;{{tailwindcss}}&lt;/script&gt;
-        ///    &lt;style&gt;
-        ///        :root {
-        ///            --bg: #f9fafb;
-        ///            --panel-bg: #ffffff;
-        ///            --panel-border: #e5e7eb;
-        ///            --text: #111827;
-        ///            --text-secondary: #6b7280;
-        ///            --accent: #2563eb;
-        ///  [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///    &lt;script src=&quot;/qrcode.min.js?type=resource&quot;&gt;&lt;/script&gt;
+        ///    &lt;script src=&quot;/tailwindcss.3.4.17.js?type=resource&quot;&gt;&lt;/script&gt;
+        ///    &lt;link rel=&quot;stylesheet&quot; href=&quot;/appstyle.css?type=resource&quot; /&gt;
+        ///    &lt;title id=&quot;title&quot;&gt;{{title}}&lt;/title&gt;
+        ///&lt;/head&gt;
+        ///
+        ///&lt;body class=&quot;min-h-screen&quot;&gt;
+        ///    &lt;!--头部导航 --&gt;
+        ///    &lt;header class [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string HtmlTemplate {
             get {
