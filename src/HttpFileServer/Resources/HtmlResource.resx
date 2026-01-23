@@ -121,6 +121,10 @@
   <data name="HtmlTemplate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>HtmlTemplate.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="qrcode.min" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>qrcode.min.js;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+    <comment>https://github.com/KeeeX/qrcodejs</comment>
+  </data>
   <data name="TableRowDirTemplate" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>TableRowDirTemplate.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
@@ -129,6 +133,7 @@
   </data>
   <data name="tailwindcss.3.4.17" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>tailwindcss.3.4.17.js;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+    <comment>https://github.com/tailwindlabs/tailwindcss</comment>
   </data>
   <data name="UploadSection" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>UploadSection.html;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>

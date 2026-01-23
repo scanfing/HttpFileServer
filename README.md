@@ -1,6 +1,6 @@
 # HttpFileServer
 
-http文件服务器 可用于局域网内目录浏览和文件下载、上传
+http文件服务器 可用于局域网内目录浏览和文件下载、上传、图片预览、打包下载zip等功能
 
 http server for browse directory and download / upload files
 
@@ -10,7 +10,7 @@ http server for browse directory and download / upload files
 
 部分后端代码来自 [Prism](https://github.com/PrismLibrary/Prism) & [.Net Reference Source](https://referencesource.microsoft.com/)
 
-部分前端资源来自 [Chromium](http://www.chromium.org/Home)
+部分前端资源来自 [Chromium](http://www.chromium.org/Home) & [tailwindcss.3.4.17](https://github.com/tailwindlabs/tailwindcss) & [qrcodejs](https://github.com/KeeeX/qrcodejs)
 
 
 ### 截图
@@ -91,9 +91,5 @@ JSON响应
 
 - 该项目为 .NET Framework WPF 应用，目标框架为 .NET Framework 4.7.2（详见 csproj）。
 - 在 Windows 上打开解决方案 `src/HttpFileServer/HttpFileServer.sln`，使用 Visual Studio 编译并运行（或直接运行 `bin/Debug/HttpFileServer.exe`）。
-
-## 致谢
-
-部分后端代码来自 [Prism](https://github.com/PrismLibrary/Prism) 与 [.Net Reference Source](https://referencesource.microsoft.com/)，前端资源参考了 Chromium 项目。
 
 

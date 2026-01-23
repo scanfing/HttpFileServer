@@ -68,6 +68,7 @@ namespace HttpFileServer.Utils
             content = content.Replace("{{footer}}", footerContent);
             content = content.Replace("{{uploadSection}}", enableUpload ? HtmlResource.UploadSection : "");
             content = content.Replace("{{tableRows}}", sb.ToString());
+            content = content.Replace("{{qrcodejs}}", HtmlResource.qrcode_min);
             content = content.Replace("{{tailwindcss}}", HtmlResource.tailwindcss_3_4_17);
             return content;
         }

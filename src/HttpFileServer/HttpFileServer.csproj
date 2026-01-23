@@ -195,6 +195,7 @@
     <None Include="Properties\app.manifest">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="Resources\qrcode.min.js" />
     <Content Include="Resources\tailwindcss.3.4.17.js" />
   </ItemGroup>
   <ItemGroup>

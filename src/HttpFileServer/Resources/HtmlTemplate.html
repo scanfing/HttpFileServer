@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HttpFileServer</title>
+    <script>{{qrcodejs}}</script>
     <script>{{tailwindcss}}</script>
     <style>
         :root {
@@ -61,9 +62,9 @@
             color: #fff;
         }
 
-        .btn-accent:hover {
-            background: var(--accent-hover);
-        }
+            .btn-accent:hover {
+                background: var(--accent-hover);
+            }
 
         a,
         button {
@@ -164,21 +165,21 @@
             line-height: 1.35;
         }
 
-        #previewPopover.hidden {
-            display: none;
-        }
+            #previewPopover.hidden {
+                display: none;
+            }
 
-        #previewPopover img {
-            max-width: 260px;
-            height: auto;
-            display: block;
-        }
+            #previewPopover img {
+                max-width: 260px;
+                height: auto;
+                display: block;
+            }
 
-        #previewPopover pre {
-            font-size: 11px;
-            margin: 0;
-            white-space: pre-wrap;
-        }
+            #previewPopover pre {
+                font-size: 11px;
+                margin: 0;
+                white-space: pre-wrap;
+            }
 
         /* 模态框保留居中风格：去除初始 display:none，使用 .hidden 控制 */
         #previewModal {
@@ -191,9 +192,9 @@
             display: flex;
         }
 
-        #previewModal.hidden {
-            display: none;
-        }
+            #previewModal.hidden {
+                display: none;
+            }
 
         #previewModalInner {
             background: var(--panel-bg);
@@ -223,9 +224,9 @@
             transition: background 0.3s;
         }
 
-        #previewModal .closeBtn:hover {
-            background: #374151;
-        }
+            #previewModal .closeBtn:hover {
+                background: #374151;
+            }
 
         #previewModal .navBtn {
             background: #f3f4f6;
@@ -236,9 +237,9 @@
             transition: background 0.3s;
         }
 
-        #previewModal .navBtn:hover {
-            background: #e5e7eb;
-        }
+            #previewModal .navBtn:hover {
+                background: #e5e7eb;
+            }
 
         #previewModal .title {
             padding: 12px 16px;
@@ -275,13 +276,13 @@
             transform: translateY(10px);
         }
 
-        #previewModal.show #previewContent.img {
-            animation: fadeInUp 0.5s forwards;
-        }
+            #previewModal.show #previewContent.img {
+                animation: fadeInUp 0.5s forwards;
+            }
 
-        #previewModal.show #previewContent.txt {
-            animation: fadeInUp 0.7s forwards;
-        }
+            #previewModal.show #previewContent.txt {
+                animation: fadeInUp 0.7s forwards;
+            }
 
         @keyframes fadeInUp {
             from {
@@ -309,10 +310,10 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
 
-        .theme-toggle-btn:hover {
-            background: var(--accent);
-            color: #fff;
-        }
+            .theme-toggle-btn:hover {
+                background: var(--accent);
+                color: #fff;
+            }
     </style>
     <title id="title">{{title}}</title>
 </head>
@@ -409,13 +410,13 @@
             files = resultFilesArrays.flat().reverse();
 
             let dataStr = files.map(file => `
- <tr class='row-hover transition-colors'>
- <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
- <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
- <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
- <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
- </tr>
- `).join('');
+         <tr class='row-hover transition-colors'>
+         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
+         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
+         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
+         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
+         </tr>
+         `).join('');
 
             document.querySelector("#fileInfo").innerHTML = dataStr;
             const overview = document.getElementById('overview')
@@ -509,7 +510,6 @@
             return `${num_year}-${num_month < 10 ? "0" + num_month : num_month}-${num_date < 10 ? "0" + num_date : num_date
                 } ${num_hour < 10 ? "0" + num_hour : num_hour}:${num_min < 10 ? "0" + num_min : num_min
                 }:${num_sec < 10 ? "0" + num_sec : num_sec}`;
-
 
         }
 
@@ -718,5 +718,4 @@
         });
     </script>
 </body>
-
 </html></html>

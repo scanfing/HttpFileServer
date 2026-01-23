@@ -19,7 +19,7 @@ namespace HttpFileServer.Resources {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class HtmlResource {
@@ -62,15 +62,23 @@ namespace HttpFileServer.Resources {
         
         /// <summary>
         ///   查找类似 &lt;!DOCTYPE html&gt;
-        ///&lt;html lang=&quot;zh-CN&quot;&gt;
+        ///&lt;html lang=&quot;zh-CN&quot; data-theme=&quot;light&quot;&gt;
         ///
         ///&lt;head&gt;
         ///    &lt;meta charset=&quot;UTF-8&quot;&gt;
         ///    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
-        ///    &lt;title&gt;文件管理系统&lt;/title&gt;
-        ///    &lt;script&gt;
-        ///        (() =&gt; {
-        ///            var qv = Object.create; var Hi = Object.defineProperty; var $v = Object.getOwnPropertyDescriptor; var Lv = Object.getOwnPropertyNames; var Mv = Object.getPrototypeOf, Nv = Object.prototype.hasOwnProperty; var df = r =&gt; Hi(r, &quot;__esModule&quot;, { value: !0 }); var hf = r =&gt; { if (typeof require [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///    &lt;title&gt;HttpFileServer&lt;/title&gt;
+        ///    &lt;script&gt;{{qrcodejs}}&lt;/script&gt;
+        ///    &lt;script&gt;{{tailwindcss}}&lt;/script&gt;
+        ///    &lt;style&gt;
+        ///        :root {
+        ///            --bg: #f9fafb;
+        ///            --panel-bg: #ffffff;
+        ///            --panel-border: #e5e7eb;
+        ///            --text: #111827;
+        ///            --text-secondary: #6b7280;
+        ///            --accent: #2563eb;
+        ///  [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string HtmlTemplate {
             get {
@@ -79,17 +87,26 @@ namespace HttpFileServer.Resources {
         }
         
         /// <summary>
-        ///   查找类似 &lt;tr class=&quot;hover:bg-gray-50 transition-colors&quot;&gt;
+        ///   查找类似 var QRCode;!function(){function t(t){this.mode=r.MODE_8BIT_BYTE,this.data=t,this.parsedData=[];for(var e=0,o=this.data.length;e&lt;o;e++){var i=[],n=this.data.charCodeAt(e);n&gt;65536?(i[0]=240|(1835008&amp;n)&gt;&gt;&gt;18,i[1]=128|(258048&amp;n)&gt;&gt;&gt;12,i[2]=128|(4032&amp;n)&gt;&gt;&gt;6,i[3]=128|63&amp;n):n&gt;2048?(i[0]=224|(61440&amp;n)&gt;&gt;&gt;12,i[1]=128|(4032&amp;n)&gt;&gt;&gt;6,i[2]=128|63&amp;n):n&gt;128?(i[0]=192|(1984&amp;n)&gt;&gt;&gt;6,i[1]=128|63&amp;n):i[0]=n,this.parsedData.push(i)}this.parsedData=Array.prototype.concat.apply([],this.parsedData),this.parsedData.length!=this.data.le [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        /// </summary>
+        internal static string qrcode_min {
+            get {
+                return ResourceManager.GetString("qrcode.min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 &lt;tr class=&quot;row-hover transition-colors&quot;&gt;
         ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap&quot;&gt;
         ///        &lt;div class=&quot;flex items-center&quot;&gt;
-        ///            &lt;a href=&quot;./${file.name}/&quot;&gt;
+        ///            &lt;a href=&quot;./${file.name}/&quot; class=&quot;file-link&quot; data-filetype=&quot;dir&quot;&gt;
         ///                &lt;i class=&quot;icon dir mr-1&quot;&gt;&lt;/i&gt;
-        ///                &lt;span class=&quot;text-sm text-gray-900 text-ellipsis&quot;&gt;${file.name}&lt;/span&gt;
+        ///                &lt;span class=&quot;file-name text-sm&quot;&gt;${file.name}&lt;/span&gt;
         ///            &lt;/a&gt;
         ///        &lt;/div&gt;
         ///    &lt;/td&gt;
         ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.size}&lt;/td&gt;
-        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gra [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string TableRowDirTemplate {
             get {
@@ -98,16 +115,17 @@ namespace HttpFileServer.Resources {
         }
         
         /// <summary>
-        ///   查找类似 &lt;tr class=&quot;hover:bg-gray-50 transition-colors&quot; onmouseenter=&quot;startPreviewTimer(event, &apos;${file.name}&apos;, &apos;${file.type}&apos;)&quot; onmouseleave=&quot;cancelPreviewTimer()&quot;&gt;
+        ///   查找类似 &lt;tr class=&quot;row-hover transition-colors&quot;&gt;
         ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap&quot;&gt;
         ///        &lt;div class=&quot;flex items-center&quot;&gt;
-        ///            &lt;a href=&quot;./${file.name}&quot;&gt;
+        ///            &lt;a href=&quot;./${file.name}&quot; data-hover-preview data-filename=&quot;${file.name}&quot; data-filetype=&quot;${file.type}&quot; class=&quot;file-link&quot;&gt;
         ///                &lt;i class=&quot;icon file mr-1&quot;&gt;&lt;/i&gt;
-        ///                &lt;span class=&quot;text-sm text-gray-900 text-ellipsis&quot;&gt;${file.name}&lt;/span&gt;
+        ///                &lt;span class=&quot;file-name text-sm&quot;&gt;${file.name}&lt;/span&gt;
         ///            &lt;/a&gt;
         ///        &lt;/div&gt;
         ///    &lt;/td&gt;
-        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-s [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///    &lt;td class=&quot;px-6 py-4 whitespace-nowrap text-sm text-gray-500&quot;&gt;${file.size}&lt;/td&gt;
+        ///   [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string TableRowFileTemplate {
             get {
@@ -116,7 +134,8 @@ namespace HttpFileServer.Resources {
         }
         
         /// <summary>
-        ///   查找类似 (()=&gt;{var qv=Object.create;var Hi=Object.defineProperty;var $v=Object.getOwnPropertyDescriptor;var Lv=Object.getOwnPropertyNames;var Mv=Object.getPrototypeOf,Nv=Object.prototype.hasOwnProperty;var df=r=&gt;Hi(r,&quot;__esModule&quot;,{value:!0});var hf=r=&gt;{if(typeof require!=&quot;undefined&quot;)return require(r);throw new Error(&apos;Dynamic require of &quot;&apos;+r+&apos;&quot; is not supported&apos;)};var P=(r,e)=&gt;()=&gt;(r&amp;&amp;(e=r(r=0)),e);var x=(r,e)=&gt;()=&gt;(e||r((e={exports:{}}).exports,e),e.exports),Ge=(r,e)=&gt;{df(r);for(var t in e)Hi(r,t,{get:e[t],enumerabl [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        ///   查找类似 (() =&gt; {
+        ///    var qv = Object.create; var Hi = Object.defineProperty; var $v = Object.getOwnPropertyDescriptor; var Lv = Object.getOwnPropertyNames; var Mv = Object.getPrototypeOf, Nv = Object.prototype.hasOwnProperty; var df = r =&gt; Hi(r, &quot;__esModule&quot;, { value: !0 }); var hf = r =&gt; { if (typeof require != &quot;undefined&quot;) return require(r); throw new Error(&apos;Dynamic require of &quot;&apos; + r + &apos;&quot; is not supported&apos;) }; var P = (r, e) =&gt; () =&gt; (r &amp;&amp; (e = r(r = 0)), e); var x = (r, e) =&gt; () =&gt; (e || r((e = { exports: {} }) [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string tailwindcss_3_4_17 {
             get {
@@ -126,14 +145,13 @@ namespace HttpFileServer.Resources {
         
         /// <summary>
         ///   查找类似 &lt;noscript&gt;
-        ///    &lt;strong&gt;很抱歉，如果没有启用JavaScript，web将无法正常工作。请启用后继续。&lt;/strong&gt;
-        ///    &lt;strong&gt;We&apos;re sorry but web doesn&apos;t work properly without JavaScript enabled. Please enable it to continue.&lt;/strong&gt;
+        /// &lt;strong&gt;很抱歉，如果没有启用JavaScript，web将无法正常工作。请启用后继续。&lt;/strong&gt;
+        /// &lt;strong&gt;We&apos;re sorry but web doesn&apos;t work properly without JavaScript enabled. Please enable it to continue.&lt;/strong&gt;
         ///&lt;/noscript&gt;
         ///&lt;!-- 拖拽上传模态框 --&gt;
         ///&lt;div id=&quot;uploadModal&quot; class=&quot;fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50&quot;&gt;
-        ///    &lt;div class=&quot;bg-white rounded-xl shadow-2xl max-w-[50%] w-full mx-4 transform transition-all&quot;&gt;
-        ///        &lt;div class=&quot;px-6 py-4 border-b&quot;&gt;
-        ///            &lt;h3 class=&quot;text-lg [字符串的其余部分被截断]&quot;; 的本地化字符串。
+        /// &lt;div class=&quot;theme-panel rounded-xl shadow-2xl w-full max-w-[70%] max-h-[80vh] mx-4 flex flex-col&quot;&gt;
+        /// &lt;div class=&quot;px-6 py-3 border-b panel-border flex items-center justify-betwe [字符串的其余部分被截断]&quot;; 的本地化字符串。
         /// </summary>
         internal static string UploadSection {
             get {
