@@ -431,6 +431,18 @@ namespace HttpFileServer.Handlers
 
         private static string GetMimeType(string filePath)
         {
+            // Prefer framework provided mapping which covers a wide set of common web file types.
+            try
+            {
+                var mapped = System.Web.MimeMapping.GetMimeMapping(filePath);
+                if (!string.IsNullOrWhiteSpace(mapped))
+                    return mapped;
+            }
+            catch
+            {
+                // Ignore and fallback to built-in map below
+            }
+
             var ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
             switch (ext)
             {
@@ -447,6 +459,22 @@ namespace HttpFileServer.Handlers
                 case ".webp": return "image/webp";
                 case ".pdf": return "application/pdf";
                 case ".html": case ".htm": return "text/html";
+                // common web assets
+                case ".css": return "text/css";
+                case ".js": return "application/javascript";
+                case ".map": return "application/json";
+                case ".svg": return "image/svg+xml";
+                case ".ico": return "image/x-icon";
+                case ".woff": return "font/woff";
+                case ".woff2": return "font/woff2";
+                case ".ttf": return "font/ttf";
+                case ".otf": return "font/otf";
+                case ".eot": return "application/vnd.ms-fontobject";
+                case ".wasm": return "application/wasm";
+                case ".mp4": return "video/mp4";
+                case ".webm": return "video/webm";
+                case ".ogg": return "audio/ogg";
+                case ".mp3": return "audio/mpeg";
                 default: return "application/octet-stream";
             }
         }
