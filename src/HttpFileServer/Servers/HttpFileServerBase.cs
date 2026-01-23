@@ -77,6 +77,8 @@ namespace HttpFileServer.Servers
 
         public virtual void Start()
         {
+            InitHandler();
+
             _cts = new CancellationTokenSource();
             _listener.Start();
             _localFileSrv.Start();
@@ -103,6 +105,8 @@ namespace HttpFileServer.Servers
                 return handler;
             return null;
         }
+
+        protected abstract void InitHandler();
 
         protected virtual void OnLocalFileSrv_DirContentChanged(object sender, string path)
         {

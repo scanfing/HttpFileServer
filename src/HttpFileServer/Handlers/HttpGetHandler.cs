@@ -20,6 +20,7 @@ namespace HttpFileServer.Handlers
     {
         #region Fields
 
+        private readonly string _debugResourceDir;
         private CacheService _cacheSrv;
 
         private CacheService _jsonCacheSrv;
@@ -32,13 +33,14 @@ namespace HttpFileServer.Handlers
 
         #region Constructors
 
-        public HttpGetHandler(string rootDir, CacheService cacheService, CacheService jsonCacheService, JsonService jsonService, bool enableUpload = false, bool enableJson = true) : base(rootDir)
+        public HttpGetHandler(string rootDir, CacheService cacheService, CacheService jsonCacheService, JsonService jsonService, bool enableUpload = false, bool enableJson = true, string debugResourceDir = null) : base(rootDir)
         {
             _cacheSrv = cacheService;
             _jsonCacheSrv = jsonCacheService;
             _jsonSrv = jsonService;
             EnableUpload = enableUpload;
             EnableJson = enableJson;
+            _debugResourceDir = debugResourceDir;
         }
 
         #endregion Constructors
@@ -97,9 +99,26 @@ namespace HttpFileServer.Handlers
 
             var tmp2 = Path.Combine(SourceDir, request.Url.LocalPath.TrimStart('/'));
             var dstpath2 = tmp2.Replace('/', '\\');
+
+            // If debug resource dir is provided and exists, bypass server-side cache for directory pages
+            var isDir = Directory.Exists(dstpath2);
+            var useDebugResources = !string.IsNullOrWhiteSpace(_debugResourceDir) && Directory.Exists(_debugResourceDir);
+            if (isDir && useDebugResources)
+            {
+                // ensure clients don't cache the debug content
+                response.AppendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                response.AppendHeader("Pragma", "no-cache");
+                response.AppendHeader("Expires", "0");
+
+                _cacheSrv.Delete(dstpath2);
+
+                await ResponseContentFull(dstpath2, request, response);
+                return;
+            }
+
             //IfNoMatchCheck
             var requestETag = request.Headers["If-None-Match"];
-            var cacheTag = _cacheSrv.GetPathCacheId(dstpath2);
+            var cacheTag = _cacheSrv?.GetPathCacheId(dstpath2);
 
             if (requestETag == cacheTag)
             {
@@ -108,7 +127,11 @@ namespace HttpFileServer.Handlers
             else
             {
                 response.AppendHeader("Cache-Control", "no-cache");
-                response.AppendHeader("Etag", cacheTag);
+                if (string.IsNullOrEmpty(cacheTag))
+                {
+                    response.AppendHeader("Etag", cacheTag);
+                }
+
                 if (request.Headers.AllKeys.Count(p => p.ToLower() == "range") > 0)
                     await ResponseContentPartial(dstpath2, request, response);
                 else
@@ -126,7 +149,7 @@ namespace HttpFileServer.Handlers
             Stream stream = null;
             var fileExist = false;
 
-            var data = _cacheSrv.GetCache(path);
+            var data = _cacheSrv?.GetCache(path);
             if (data is null)
             {
                 if (File.Exists(path))
@@ -145,9 +168,9 @@ namespace HttpFileServer.Handlers
                         location = Path.GetFileName(SourceDir) + "\\" + path.Replace(SourceDir, "").Trim('\\');
                         title = Path.GetFileName(path.TrimEnd('\\')) + " -- HttpFileServer";
                     }
-                    var content = HtmlExtension.GenerateHtmlContentForDir(SourceDir, path, path != SourceDir, EnableUpload, location, title);
+                    var content = HtmlExtension.GenerateHtmlContentForDir(SourceDir, path, path != SourceDir, EnableUpload, location, title, _debugResourceDir);
                     data = Encoding.UTF8.GetBytes(content);
-                    _cacheSrv.SaveCache(path, data);
+                    _cacheSrv?.SaveCache(path, data);
                     stream = new MemoryStream(data);
                 }
             }

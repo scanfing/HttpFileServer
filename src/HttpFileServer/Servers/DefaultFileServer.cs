@@ -28,7 +28,7 @@ namespace HttpFileServer.Servers
         protected JsonService _jsonService;
         protected string _rootDir;
 
-        protected bool _runAsWebHostServer;
+        private string debugDir = App.Current is App app ? app.DebugResourcePath : null;
 
         #endregion Fields
 
@@ -41,19 +41,17 @@ namespace HttpFileServer.Servers
             _jsonCacheSrv = new CacheService();
             _enableJson = enableJson;
             _jsonService = new JsonService();
-
-            InitHandler();
         }
 
         #endregion Constructors
 
         #region Methods
 
-        protected virtual void InitHandler()
+        protected override void InitHandler()
         {
             RegisterHandler("HEAD", new HttpHeadHandler(_rootDir, _cacheSrv, _jsonCacheSrv, _jsonService));
 
-            RegisterHandler("GET", new HttpGetHandler(_rootDir, _cacheSrv, _jsonCacheSrv, _jsonService, EnableUpload, _enableJson));
+            RegisterHandler("GET", new HttpGetHandler(_rootDir, _cacheSrv, _jsonCacheSrv, _jsonService, EnableUpload, _enableJson, debugDir));
 
             if (EnableUpload)
                 RegisterHandler("POST", new HttpPostHandler(_rootDir));

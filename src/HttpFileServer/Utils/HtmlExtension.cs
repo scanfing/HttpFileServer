@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web;
+using System.Text.RegularExpressions;
 using HttpFileServer.Resources;
 
 namespace HttpFileServer.Utils
@@ -13,7 +14,7 @@ namespace HttpFileServer.Utils
     {
         #region Methods
 
-        public static string GenerateHtmlContentForDir(string rootdir, string dstpath, bool showParent, bool enableUpload, string header, string title = "HttpFileServer")
+        public static string GenerateHtmlContentForDir(string rootdir, string dstpath, bool showParent, bool enableUpload, string header, string title = "HttpFileServer", string debugResourceDir = null)
         {
             var stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -21,6 +22,22 @@ namespace HttpFileServer.Utils
             var files = Directory.GetFiles(dstpath);
             var index = 1;
             StringBuilder sb = new StringBuilder();
+
+            // Load row templates - prefer debugResourceDir overrides
+            string dirRowTemplate = HtmlResource.TableRowDirTemplate;
+            string fileRowTemplate = HtmlResource.TableRowFileTemplate;
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(debugResourceDir))
+                {
+                    var dirTplPath = Path.Combine(debugResourceDir, "TableRowDirTemplate.html");
+                    var fileTplPath = Path.Combine(debugResourceDir, "TableRowFileTemplate.html");
+                    if (File.Exists(dirTplPath)) dirRowTemplate = File.ReadAllText(dirTplPath, Encoding.UTF8);
+                    if (File.Exists(fileTplPath)) fileRowTemplate = File.ReadAllText(fileTplPath, Encoding.UTF8);
+                }
+            }
+            catch { }
+
             if (showParent)
             {
                 // 上一级目录行使用统一的样式和暗色主题高亮支持
@@ -32,15 +49,28 @@ namespace HttpFileServer.Utils
                               "<td class=\"px-6 py-4 whitespace-nowrap text-sm font-medium\"></td></tr>");
                 index++;
             }
+
             foreach (var dir in dirs)
             {
-                var drinfo = new DirectoryInfo(dir);
-                sb.AppendLine(drinfo.GetHtmlTableRowString(index++ % 2 == 1));
+                var di = new DirectoryInfo(dir);
+                var row = dirRowTemplate;
+                row = row.Replace("${file.name}", HttpUtility.HtmlEncode(di.Name));
+                row = row.Replace("${file.size}", "--");
+                row = row.Replace("${file.modified}", di.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                row = row.Replace("${file.type}", "--");
+                sb.AppendLine(row);
+                index++;
             }
             foreach (var file in files)
             {
-                var finfo = new FileInfo(file);
-                sb.AppendLine(finfo.GetHtmlTableRowString(index++ % 2 == 1));
+                var fi = new FileInfo(file);
+                var row = fileRowTemplate;
+                row = row.Replace("${file.name}", HttpUtility.HtmlEncode(fi.Name));
+                row = row.Replace("${file.size}", SizeHelper.BytesToSize(fi.Length));
+                row = row.Replace("${file.modified}", fi.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                row = row.Replace("${file.type}", fi.Extension);
+                sb.AppendLine(row);
+                index++;
             }
             stopWatch.Stop();
             var dtcache = DateTime.Now;
@@ -61,40 +91,87 @@ namespace HttpFileServer.Utils
                 breadCrumb.Append($" / <a href='{curPath}/'>{pathParts[i]}</a>");
             }
 
-            var content = HtmlResource.HtmlTemplate;
+            // Try to load template and auxiliary resources from debugResourceDir when provided.
+            string content;
+            try
+            {
+                var htmlTemplatePath = string.IsNullOrWhiteSpace(debugResourceDir) ? null : Path.Combine(debugResourceDir, "HtmlTemplate.html");
+                if (!string.IsNullOrWhiteSpace(htmlTemplatePath) && File.Exists(htmlTemplatePath))
+                {
+                    content = File.ReadAllText(htmlTemplatePath, Encoding.UTF8);
+                }
+                else
+                {
+                    content = HtmlResource.HtmlTemplate;
+                }
+            }
+            catch
+            {
+                content = HtmlResource.HtmlTemplate;
+            }
             content = content.Replace("{{title}}", title);
             content = content.Replace("{{header}}", breadCrumb.ToString());
             content = content.Replace("{{itemcount}}", (dirs.Length + files.Length).ToString());
             content = content.Replace("{{footer}}", footerContent);
-            content = content.Replace("{{uploadSection}}", enableUpload ? HtmlResource.UploadSection : "");
+            // Upload section: allow overriding from debug resource dir
+            string uploadSection = HtmlResource.UploadSection;
+            try
+            {
+                var uploadPath = string.IsNullOrWhiteSpace(debugResourceDir) ? null : Path.Combine(debugResourceDir, "UploadSection.html");
+                if (!string.IsNullOrWhiteSpace(uploadPath) && File.Exists(uploadPath))
+                    uploadSection = File.ReadAllText(uploadPath, Encoding.UTF8);
+            }
+            catch { }
+            content = content.Replace("{{uploadSection}}", enableUpload ? uploadSection : "");
             content = content.Replace("{{tableRows}}", sb.ToString());
-            content = content.Replace("{{qrcodejs}}", HtmlResource.qrcode_min);
-            content = content.Replace("{{tailwindcss}}", HtmlResource.tailwindcss_3_4_17);
+
+            // qrcode and tailwind: allow overriding from debug resource dir
+            string qrcodeJs = HtmlResource.qrcode_min;
+            string tailwindJs = HtmlResource.tailwindcss_3_4_17;
+            try
+            {
+                var qrcodePath = string.IsNullOrWhiteSpace(debugResourceDir) ? null : Path.Combine(debugResourceDir, "qrcode.min.js");
+                if (!string.IsNullOrWhiteSpace(qrcodePath) && File.Exists(qrcodePath))
+                    qrcodeJs = File.ReadAllText(qrcodePath, Encoding.UTF8);
+            }
+            catch { }
+            try
+            {
+                var tailwindPath = string.IsNullOrWhiteSpace(debugResourceDir) ? null : Path.Combine(debugResourceDir, "tailwindcss.3.4.17.js");
+                if (!string.IsNullOrWhiteSpace(tailwindPath) && File.Exists(tailwindPath))
+                    tailwindJs = File.ReadAllText(tailwindPath, Encoding.UTF8);
+            }
+            catch { }
+
+            content = content.Replace("{{qrcodejs}}", qrcodeJs);
+            content = content.Replace("{{tailwindcss}}", tailwindJs);
+
+            // Final pass: replace any remaining {{key}} placeholders from known values (case-insensitive).
+            try
+            {
+                var replacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["title"] = title,
+                    ["header"] = breadCrumb.ToString(),
+                    ["itemcount"] = (dirs.Length + files.Length).ToString(),
+                    ["footer"] = footerContent,
+                    ["uploadSection"] = enableUpload ? uploadSection : "",
+                    ["tableRows"] = sb.ToString(),
+                    ["qrcodejs"] = qrcodeJs,
+                    ["tailwindcss"] = tailwindJs
+                };
+
+                content = Regex.Replace(content, "\\{\\{\\s*(.*?)\\s*\\}\\}", m =>
+                {
+                    var key = m.Groups[1].Value.Trim();
+                    if (replacements.TryGetValue(key, out var val))
+                        return val;
+                    return m.Value; // leave unchanged if unknown
+                }, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            }
+            catch { }
+
             return content;
-        }
-
-        public static string GetHtmlTableRowString(this FileSystemInfo info, bool isOdd)
-        {
-            if (info is DirectoryInfo dir)
-            {
-                var dirStr = HtmlResource.TableRowDirTemplate;
-                dirStr = dirStr.Replace("${file.name}", dir.Name);
-                dirStr = dirStr.Replace("${file.size}", "--");
-                dirStr = dirStr.Replace("${file.modified}", dir.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                dirStr = dirStr.Replace("${file.type}", "--");
-                return dirStr;
-            }
-            else if (info is FileInfo finfo)
-            {
-                var filestr = HtmlResource.TableRowFileTemplate;
-                filestr = filestr.Replace("${file.name}", finfo.Name);
-                filestr = filestr.Replace("${file.size}", SizeHelper.BytesToSize(finfo.Length));
-                filestr = filestr.Replace("${file.modified}", finfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                filestr = filestr.Replace("${file.type}", finfo.Extension);
-                return filestr;
-            }
-
-            return "";
         }
 
         #endregion Methods

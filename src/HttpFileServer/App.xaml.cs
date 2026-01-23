@@ -24,7 +24,25 @@ namespace HttpFileServer
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
+            // Parse startup args for debug resource directory
+            try
+            {
+                foreach (var a in e.Args)
+                {
+                    if (a.StartsWith("--debug-resource=", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var val = a.Substring("--debug-resource=".Length).Trim('"');
+                        if (!string.IsNullOrWhiteSpace(val))
+                        {
+                            DebugResourcePath = val;
+                        }
+                    }
+                }
+            }
+            catch { }
         }
+
+        public string DebugResourcePath { get; private set; }
 
         private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {

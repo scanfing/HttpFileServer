@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 using HttpFileServer.Core;
+using HttpFileServer;
 using HttpFileServer.Infrastructure;
 using HttpFileServer.Models;
 using HttpFileServer.Servers;
@@ -24,13 +25,14 @@ namespace HttpFileServer.ViewModels
         private ConfigService _cfgSrv;
         private Config _config;
         private bool _enableUpload = false;
-        private bool _useWebServer = false;
         private bool _isRunning = false;
         private ushort _listenPort = 80;
         private string _logContent = string.Empty;
         private string _sourceDir;
         private ServerStatus _status = ServerStatus.Ready;
-        private string _themeMode = "Light"; // Light / Dark / System
+        private string _themeMode = "Light";
+        private bool _useWebServer = false;
+        // Light / Dark / System
 
         #endregion Fields
 
@@ -39,7 +41,8 @@ namespace HttpFileServer.ViewModels
         public ShellViewModel()
         {
             Title = "File Server";
-
+            // capture app instance if available
+            var _app = Application.Current as App;
             RequestModels = new ObservableCollection<RequestModel>();
 
             CommandStartServer = new CommandImpl(OnRequestStartServer, CanStartServer);
@@ -94,12 +97,6 @@ namespace HttpFileServer.ViewModels
             set => SetProperty(ref _enableUpload, value);
         }
 
-        public bool UseWebServer
-        {
-            get => _useWebServer;
-            set => SetProperty(ref _useWebServer, value);
-        }
-
         public IFileServer FileServer { get; private set; }
 
         public bool IsRunning
@@ -142,6 +139,12 @@ namespace HttpFileServer.ViewModels
 
         public string ThemeMode { get => _themeMode; set => SetProperty(ref _themeMode, value); }
 
+        public bool UseWebServer
+        {
+            get => _useWebServer;
+            set => SetProperty(ref _useWebServer, value);
+        }
+
         #endregion Properties
 
         #region Methods
@@ -181,6 +184,23 @@ namespace HttpFileServer.ViewModels
                 var shell = sender as ShellView;
                 shell.WindowState = WindowState.Minimized;
             }
+
+            // If application started with --debug-resource, show debug info in title
+            string debugRes = null;
+            try
+            {
+                var app = System.Windows.Application.Current as App;
+                if (app != null)
+                    debugRes = app.DebugResourcePath;
+            }
+            catch { }
+
+            if (!string.IsNullOrWhiteSpace(debugRes))
+            {
+                Title = $"File Server - [ Html Debug ] -- {debugRes}";
+                LogContent += ($"[ Html Debug ]{Environment.NewLine}{debugRes}{Environment.NewLine}{Environment.NewLine}");
+            }
+
             if ((AutoStartHelper.IsProcessRunWithAutoStart() && _config.AutoStartWithSystem) || _config.AutoStartOnLaunch)
             {
                 OnRequestStartServer();
@@ -291,10 +311,31 @@ namespace HttpFileServer.ViewModels
 
             Directory.CreateDirectory(SourceDir);
 
-            if (UseWebServer)
+            // If application started with --debug-resource, prefer HtmlDebugServer
+            string debugRes = null;
+            try
+            {
+                var app = System.Windows.Application.Current as App;
+                if (app != null)
+                    debugRes = app.DebugResourcePath;
+            }
+            catch { }
+
+            if (!string.IsNullOrWhiteSpace(debugRes))
+            {
+                // Pass debug resource directory to server base so handlers can read templates directly
+                FileServer = new DefaultFileServer(ListenPort, SourceDir, true, EnableUpload)
+                {
+                };
+            }
+            else if (UseWebServer)
+            {
                 FileServer = new StaticWebHostServer(ListenPort, SourceDir, true, EnableUpload);
+            }
             else
+            {
                 FileServer = new DefaultFileServer(ListenPort, SourceDir, true, EnableUpload); // 始终启用JSON
+            }
 
             FileServer.LogGenerated += FileServer_LogGenerated;
             FileServer.NewReqeustIn += FileServer_NewReqeustIn;
