@@ -374,18 +374,45 @@ namespace HttpFileServer.Handlers
 
             resp.ContentType = "application/zip";
             resp.ContentEncoding = Encoding.UTF8;
-            var dirname = Path.GetFileName(path);
-            if (request.Url.LocalPath != "/")
-            {
-                dirname = Path.GetFileName(request.Url.LocalPath).Trim('\\').Trim();
-            }
-            dirname = dirname.Replace(SourceDir, "");
-            var dsiposition = $"attachment; filename={Uri.EscapeUriString(dirname)}.zip";
+
+            // Determine a sensible default zip file name (dirname.zip)
+            string dirname = null;
             try
             {
-                resp.Headers.Set("Content-Disposition", dsiposition);
+                if (Directory.Exists(path))
+                {
+                    // For directories use the folder name
+                    dirname = new DirectoryInfo(path).Name;
+                }
+                else if (File.Exists(path))
+                {
+                    // For a single file use the file name without extension
+                    dirname = Path.GetFileNameWithoutExtension(path);
+                }
             }
-            catch (Exception ex) { }
+            catch { }
+
+            // Fallback to share root name when nothing derived
+            if (string.IsNullOrWhiteSpace(dirname))
+            {
+                dirname = Path.GetFileName(SourceDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                if (string.IsNullOrWhiteSpace(dirname))
+                    dirname = "download";
+            }
+
+            // Build Content-Disposition with both plain filename and RFC5987 encoded filename*
+            var plainFileName = $"{dirname}.zip";
+            var encodedFileName = Uri.EscapeDataString(plainFileName);
+            var contentDisposition = $"attachment; filename=\"{plainFileName}\"; filename*=UTF-8''{encodedFileName}";
+            try
+            {
+                // Use AppendHeader which works with HttpListenerResponse
+                resp.AppendHeader("Content-Disposition", contentDisposition);
+            }
+            catch (Exception)
+            {
+                // best-effort only
+            }
 
             using (var zipStream = new ZipOutputStream(resp.OutputStream))
             {
