@@ -363,6 +363,29 @@
     <footer class="flex justify-center pb-8">
         <div class="flex items-center space-x-2 text-secondary">{{footer}}</div>
     </footer>
+
+    <!-- 悬停预览浮层 -->
+    <div id="previewPopover" class="hidden"></div>
+
+    <!-- 修改后的预览模态框 -->
+    <div id="previewModal" class="hidden">
+        <div id="previewModalInner" class="rounded-xl">
+            <div class="px-4 py-2 border-b flex items-center space-x-2">
+                <button id="prevBtn" class="px-2 py-1 text-xs border rounded disabled:opacity-30" onclick="previewPrev()">
+                    ◀
+                </button>
+                <button id="nextBtn" class="px-2 py-1 text-xs border rounded disabled:opacity-30" onclick="previewNext()">
+                    ▶
+                </button>
+                <h3 id="previewTitle" class="text-sm font-semibold text-gray-900 flex-1 truncate">文件预览</h3>
+                <button id="closePreview" class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600" onclick="closePreview()">关闭</button>
+            </div>
+            <div class="p-4">
+                <div id="previewContent" class="flex justify-center"></div>
+            </div>
+        </div>
+    </div>
+
     <!--主题切换按钮（固定右下角） -->
     <button id="themeToggle" class="theme-toggle-btn" type="button">切换主题</button>
     {{uploadSection}}
@@ -410,13 +433,13 @@
             files = resultFilesArrays.flat().reverse();
 
             let dataStr = files.map(file => `
-         <tr class='row-hover transition-colors'>
-         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
-         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
-         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
-         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
-         </tr>
-         `).join('');
+                 <tr class='row-hover transition-colors'>
+                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
+                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
+                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
+                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
+                 </tr>
+                 `).join('');
 
             document.querySelector("#fileInfo").innerHTML = dataStr;
             const overview = document.getElementById('overview')
