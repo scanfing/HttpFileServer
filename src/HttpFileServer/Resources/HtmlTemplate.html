@@ -9,130 +9,6 @@
     <script src="/tailwindcss.3.4.17.js?type=resource"></script>
     <link rel="stylesheet" href="/appstyle.css?type=resource" />
     <title id="title">{{title}}</title>
-    <style>
-        /* QR button style */
-        .qr-btn {
-            /* make the QR icon look like the text action links on the left */
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: auto;
-            height: 1em;
-            /* match text line height */
-            line-height: 1;
-            vertical-align: middle;
-            /* align with surrounding text */
-            border: none;
-            /* remove boxed border */
-            border-radius: 4px;
-            background: transparent;
-            color: inherit;
-            /* inherit link/text color */
-            transition: color .12s, transform .06s;
-            box-shadow: none;
-            cursor: pointer;
-            padding: 0 6px;
-            /* small horizontal padding to match spacing */
-            font-size: 14px;
-        }
-
-            .qr-btn:hover {
-                text-decoration: underline;
-                /* behave like a link */
-                transform: translateY(-1px);
-            }
-
-            .qr-btn:focus {
-                outline: 2px solid rgba(59,130,246,0.3);
-                outline-offset: 2px;
-                border-radius: 6px;
-            }
-
-            .qr-btn svg {
-                width: 18px;
-                height: 18px;
-                display: block;
-                /* avoid inline spacing quirks */
-                fill: currentColor;
-                /* small vertical nudge to better match text baseline */
-                transform: translateY(1px);
-            }
-
-        /* Center action buttons in the last column */
-        #tableBody td:last-child {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px; /* spacing between actions */
-        }
-
-        /* popovers and modals */
-        #qrPopover, #previewPopover {
-            position: absolute;
-            z-index: 70;
-            padding: 10px;
-            border-radius: 10px;
-            background: var(--panel-bg);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-            border: 1px solid rgba(255,255,255,0.04);
-            transition: opacity .12s, transform .12s;
-            opacity: 0;
-            transform: scale(.98);
-            pointer-events: none;
-        }
-
-            #qrPopover:not(.hidden), #previewPopover:not(.hidden) {
-                opacity: 1;
-                transform: scale(1);
-                pointer-events: auto
-            }
-
-        /* modal overlay */
-        #qrModal, #previewModal {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,0.45);
-            z-index: 80;
-            padding: 20px;
-        }
-
-        #qrModalInner, #previewModalInner {
-            background: var(--panel-bg);
-            border-radius: 12px;
-            padding: 0;
-            max-width: 92%;
-            width: 480px;
-            box-shadow: 0 18px 50px rgba(2,6,23,0.6);
-            border: 1px solid var(--panel-border);
-            overflow: hidden;
-        }
-
-        #qrModalContent {
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center
-        }
-
-        #qrModalText {
-            padding: 0 20px 20px
-        }
-
-        /* responsive */
-        @media (max-width:480px) {
-            #qrModalInner {
-                width: 92%
-            }
-
-            #qrModalContent div {
-                width: 240px;
-                height: 240px
-            }
-        }
-    </style>
 </head>
 
 <body class="min-h-screen">
@@ -183,8 +59,6 @@
 
     <!-- 悬停预览浮层 -->
     <div id="previewPopover" class="hidden"></div>
-    <!-- QR 悬停浮层 -->
-    <div id="qrPopover" class="hidden"></div>
 
     <!-- 修改后的预览模态框 -->
     <div id="previewModal" class="hidden">
@@ -201,20 +75,8 @@
             </div>
             <div class="p-4">
                 <div id="previewContent" class="flex justify-center"></div>
+                <div id="shareText" class="mt-3 text-sm text-secondary break-words text-center"></div>
             </div>
-        </div>
-    </div>
-
-    <!-- QR 大模态框 -->
-    <div id="qrModal" class="hidden">
-        <div id="qrModalInner" class="rounded-xl" style="max-width:420px; width:90%;">
-            <div class="px-4 py-2 border-b flex items-center space-x-2">
-                <h3 id="qrModalTitle" class="text-sm font-semibold text-gray-900 flex-1 truncate">二维码</h3>
-                <button id="closeQrModal" class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600" onclick="closeQrModal()">关闭</button>
-            </div>
-            <div id="qrModalContent" class="p-4 flex flex-col items-center">
-            </div>
-            <div id="qrModalText" class="mt-3 text-sm text-secondary break-words text-center" style="padding:0 20px 20px"></div>
         </div>
     </div>
 
@@ -265,14 +127,13 @@
             files = resultFilesArrays.flat().reverse();
 
             let dataStr = files.map(file => `
-                                                 <tr class='row-hover transition-colors'>
-                                                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
-                                                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
-                                                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
-                                                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.type}</td>
-                                                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
-                                                 </tr>
-                                                 `).join('');
+                 <tr class='row-hover transition-colors'>
+                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
+                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
+                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
+                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
+                 </tr>
+                 `).join('');
 
             document.querySelector("#fileInfo").innerHTML = dataStr;
             const overview = document.getElementById('overview')
@@ -380,7 +241,16 @@
             cancelPreviewTimer();
             lastHoverCoords = { x: event.pageX, y: event.pageY };
             previewTimerId = setTimeout(() => {
-                openPreviewByName(fileName, lastHoverCoords, true);
+                openPreviewOrShare(fileName, lastHoverCoords, true);
+            }, 600);
+            //600ms 后触发
+        }
+
+        function startShareTimer(event, fileName) {
+            cancelPreviewTimer();
+            lastHoverCoords = { x: event.pageX, y: event.pageY };
+            previewTimerId = setTimeout(() => {
+                openPreviewOrShare(fileName, lastHoverCoords, true, 'share');
             }, 600);
             //600ms 后触发
         }
@@ -412,7 +282,7 @@
         }
 
         function buildPreviewList() {
-            previewFileNames = Array.from(document.querySelectorAll('#tableBody button[data-filename]')).map(b => b.getAttribute('data-filename')).filter(Boolean);
+            previewFileNames = Array.from(document.querySelectorAll('#tableBody button[data-filename]')).map(b => b.getAttribute('data-filename')).filter(n => !!n);
         }
 
         function updateNavButtons() {
@@ -422,14 +292,27 @@
             next.disabled = currentPreviewIndex >= previewFileNames.length - 1;
         }
 
-        function openPreviewByName(fileName, coords = null, asPopover = false) {
+        function openPreviewOrShare(fileName, coords = null, asPopover = false, type = 'preview') {
             if (asPopover) {
-                popover.innerHTML = '<div class="text-secondary text-[11px]">加载中...</div>';
                 popover.classList.remove('hidden');
                 positionPopover(coords);
             }
+            if (type === 'preview') {
+                previewHandle(fileName, coords, asPopover)
+                document.querySelector("#prevBtn").classList.remove("hidden");
+                document.querySelector("#nextBtn").classList.remove("hidden");
+            } else {
+                shareHandle(fileName, coords, asPopover)
+                document.querySelector("#prevBtn").classList.add("hidden");
+                document.querySelector("#nextBtn").classList.add("hidden");
+            }
+            
+        }
+
+        function previewHandle(fileName, coords, asPopover) {
             const fileExtension = fileName.split('.').pop().toLowerCase();
             if (asPopover) {
+                popover.innerHTML = '<div class="text-secondary text-[11px]">加载中...</div>';
                 if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'].includes(fileExtension)) {
                     const img = new Image();
                     img.onload = () => {
@@ -508,9 +391,35 @@
             updateNavButtons();
         }
 
+        function shareHandle(fileName, coords, asPopover) {
+            const shareUrl = location.href + fileName
+            if (asPopover) {
+                new QRCode(popover, shareUrl)
+                requestAnimationFrame(() => {
+                    positionPopover(coords);
+                })
+                return
+            }
+            const modal = document.getElementById('previewModal');
+            const titleEl = document.getElementById('previewTitle');
+            const contentEl = document.getElementById('previewContent');
+            const shareTextEl = document.getElementById('shareText')
+            titleEl.textContent = fileName;
+            contentEl.innerHTML = '';
+            shareTextEl.innerText = shareUrl;
+            new QRCode(contentEl, shareUrl)
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+
+        function shareFile(e) {
+            const fileName = e.currentTarget.getAttribute('data-filename');
+            openPreviewOrShare(fileName, null, false, 'share');
+        }
+
         function previewFile(e) {
             const fileName = e.currentTarget.getAttribute('data-filename');
-            openPreviewByName(fileName);
+            openPreviewOrShare(fileName);
         }
 
         function closePreview() {
@@ -522,13 +431,13 @@
 
         function previewPrev() {
             if (currentPreviewIndex > 0) {
-                openPreviewByName(previewFileNames[currentPreviewIndex - 1]);
+                openPreviewOrShare(previewFileNames[currentPreviewIndex - 1]);
             }
         }
 
         function previewNext() {
             if (currentPreviewIndex < previewFileNames.length - 1) {
-                openPreviewByName(previewFileNames[currentPreviewIndex + 1]);
+                openPreviewOrShare(previewFileNames[currentPreviewIndex + 1]);
             }
         }
 
@@ -555,12 +464,18 @@
         // 仅文件名链接悬停触发
         const tableBody = document.getElementById('tableBody');
         tableBody.addEventListener('mouseover', e => {
-            const link = e.target.closest('a[data-hover-preview]');
-            if (!link) return;
-            startPreviewTimer(e, link.getAttribute('data-filename'), link.getAttribute('data-filetype'));
+            let link = e.target.closest('a[data-hover-preview]');
+            if (link) {
+                startPreviewTimer(e, link.getAttribute('data-filename'), link.getAttribute('data-filetype'));
+                return
+            }
+            link = e.target.closest('button[data-hover-share]');
+            if (link) {
+                startShareTimer(e, link.getAttribute('data-filename'));
+            }
         });
         tableBody.addEventListener('mouseout', e => {
-            const link = e.target.closest('a[data-hover-preview]');
+            const link = e.target.closest('a[data-hover-preview]') || e.target.closest('button[data-hover-share]');
             if (link) {
                 cancelPreviewTimer();
                 hidePreviewPopover();
@@ -571,228 +486,6 @@
                 lastHoverCoords = { x: e.pageX, y: e.pageY };
                 positionPopover(lastHoverCoords);
             }
-        });
-
-        // ================= QR 逻辑 =================
-        const qrPopover = document.getElementById('qrPopover');
-        let qrTimerId = null;
-        let lastQrCoords = null;
-        let lastQrTarget = null;
-
-        // 构建完整外部访问 URL，如: http://host:port/path/to/file
-        function buildAbsoluteUrl(file) {
-            if (!file) return '';
-            // 去掉可能的前导斜杠，保留路径分隔符
-            const path = String(file).replace(/^\/+/, '');
-            return `${window.location.protocol}//${window.location.host}/${encodeURI(path)}`;
-        }
-
-        function startQrTimer(event, text, fileName) {
-            if (!text) return;
-            cancelQrTimer();
-            // remember both mouse coords and the closest qr button element (if any)
-            lastQrCoords = { x: event.pageX, y: event.pageY };
-            lastQrTarget = event.target && event.target.closest ? event.target.closest('button[data-qrcode]') : null;
-            qrTimerId = setTimeout(() => {
-                openQrPopover(text, lastQrCoords);
-            }, 400);
-        }
-        function cancelQrTimer() {
-            if (qrTimerId) {
-                clearTimeout(qrTimerId);
-                qrTimerId = null;
-            }
-            lastQrTarget = null;
-        }
-
-        function openQrPopover(text, coords) {
-            qrPopover.innerHTML = '<div class="text-secondary text-[11px]">加载中...</div>';
-            qrPopover.classList.remove('hidden');
-            positionQrPopover(coords);
-            // 生成二维码
-            setTimeout(() => {
-                qrPopover.innerHTML = '';
-                const qrWrap = document.createElement('div');
-                qrWrap.style.width = '160px';
-                qrWrap.style.height = '160px';
-                qrPopover.appendChild(qrWrap);
-                try {
-                    // davidshimjs qrcode lib
-                    new QRCode(qrWrap, { text: text, width: 160, height: 160 });
-                } catch (e) {
-                    qrWrap.textContent = '无法生成二维码';
-                }
-                positionQrPopover(coords);
-            }, 20);
-        }
-        function positionQrPopover(coords) {
-            // Try to position relative to the hovered button if available so the popover doesn't overlap the title text
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            const rect = qrPopover.getBoundingClientRect();
-            const offset = 20; // 拉开一点，避免被悬停文字遮挡
-
-            if (lastQrTarget) {
-                const t = lastQrTarget.getBoundingClientRect();
-                // Prefer to place popover to the right of the target
-                let left = Math.round(t.right + offset);
-                let top = Math.round(t.top + (t.height - rect.height) / 2);
-
-                // If placing to the right would overflow, place to the left
-                if (left + rect.width > vw - 20) {
-                    left = Math.round(t.left - rect.width - offset);
-                }
-
-                // Clamp vertical position within viewport
-                if (top < 10) top = 10;
-                if (top + rect.height > vh - 20) top = vh - rect.height - 20;
-
-                qrPopover.style.left = left + 'px';
-                qrPopover.style.top = top + 'px';
-                return;
-            }
-
-            if (!coords) return;
-            // fallback to mouse coords
-            let left = coords.x + offset;
-            let top = coords.y + offset;
-            if (left + rect.width > vw - 20) left = vw - rect.width - 20;
-            if (top + rect.height > vh - 20) top = vh - rect.height - 20;
-            qrPopover.style.left = left + 'px';
-            qrPopover.style.top = top + 'px';
-        }
-        function hideQrPopover() {
-            qrPopover.classList.add('hidden');
-            qrPopover.innerHTML = '';
-            lastQrTarget = null;
-        }
-
-        // 大二维码模态框
-        function openQrModal(fileName, text) {
-            const modal = document.getElementById('qrModal');
-            const titleEl = document.getElementById('qrModalTitle');
-            const contentEl = document.getElementById('qrModalContent');
-            const textEl = document.getElementById('qrModalText');
-            titleEl.textContent = fileName || '二维码';
-            // 显示未转义的 URL 文本（用于可读显示），但生成二维码仍使用原始 text
-            let displayText = text || '';
-            try {
-                displayText = decodeURI(displayText);
-            } catch (e) {
-                // 如果 decode 失败，保持原始文本
-            }
-            textEl.textContent = displayText;
-            contentEl.innerHTML = '';
-            const wrap = document.createElement('div');
-            wrap.style.width = '320px';
-            wrap.style.height = '320px';
-            contentEl.appendChild(wrap);
-            try {
-                new QRCode(wrap, { text: text, width: 320, height: 320 });
-            } catch (e) {
-                wrap.textContent = '无法生成二维码';
-            }
-            modal.classList.remove('hidden');
-            modal.style.display = 'flex';
-        }
-        function closeQrModal() {
-            const modal = document.getElementById('qrModal');
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-        }
-
-        // 关闭模态框点击遮罩
-        document.getElementById('qrModal').addEventListener('click', function (e) {
-            if (e.target.id === 'qrModal') {
-                closeQrModal();
-            }
-        });
-
-        // 让 ESC 也能关闭 qr 模态
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                closeQrModal();
-            }
-        });
-
-        // 注入二维码按钮到操作列（若表格由服务端渲染此部分可能重复，函数会检查避免重复注入）
-        function injectQrButtons() {
-            const rows = Array.from(document.querySelectorAll('#tableBody tr'));
-            rows.forEach(row => {
-                // 找到已有的预览按钮或文件名
-                let fname = null;
-                const previewBtn = row.querySelector('button[data-filename]');
-                if (previewBtn) fname = previewBtn.getAttribute('data-filename');
-                if (!fname) {
-                    const link = row.querySelector('a[data-filename]');
-                    if (link) fname = link.getAttribute('data-filename');
-                }
-                if (!fname) {
-                    const nameCell = row.querySelector('td');
-                    if (nameCell) fname = nameCell.textContent.trim();
-                }
-                if (!fname) return;
-
-                // 操作列为最后一个 td
-                const tds = row.querySelectorAll('td');
-                if (!tds || tds.length === 0) return;
-                const opTd = tds[tds.length - 1];
-
-                // 检查是否已存在 qr 按钮
-                if (opTd.querySelector('button[data-qrcode]')) return;
-
-                const btn = document.createElement('button');
-                btn.setAttribute('type', 'button');
-                // avoid native browser tooltip (title) which can overlap the QR popover
-                // provide an accessible label instead
-                btn.setAttribute('aria-label', '显示下载二维码');
-                btn.setAttribute('data-qrcode', 'true');
-                btn.setAttribute('data-filename', fname);
-                btn.className = 'qr-btn ml-2';
-                // svg 图标 (简化的二维码图标)
-                btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zM5 5v4h4V5zM13 3h8v8h-8zM15 5v4h4V5zM3 13h8v8H3zM5 15v4h4v-4zM11 11h2v2h-2zM17 11h2v2h-2zM11 17h2v2h-2zM17 17h2v2h-2zM11 13h2v2h-2z" /></svg>';
-
-                // 点击打开大二维码
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const file = btn.getAttribute('data-filename');
-                    // 构建下载链接文本（使用完整外部访问 URL）
-                    const text = buildAbsoluteUrl(file);
-                    openQrModal(file, text);
-                });
-
-                // 鼠标悬停处理通过事件委托（下面）也会触发，但为更好的移动可在按钮上也绑定 mouseenter/mouseleave
-                opTd.appendChild(btn);
-            });
-        }
-
-        // 委托处理悬停二维码
-        tableBody.addEventListener('mouseover', e => {
-            const qrBtn = e.target.closest('button[data-qrcode]');
-            if (!qrBtn) return;
-            const file = qrBtn.getAttribute('data-filename');
-            if (!file) return;
-            const text = buildAbsoluteUrl(file);
-            startQrTimer(e, text, file);
-        });
-        tableBody.addEventListener('mouseout', e => {
-            const qrBtn = e.target.closest('button[data-qrcode]');
-            if (qrBtn) {
-                cancelQrTimer();
-                hideQrPopover();
-            }
-        });
-        tableBody.addEventListener('mousemove', e => {
-            if (!qrPopover.classList.contains('hidden')) {
-                lastQrCoords = { x: e.pageX, y: e.pageY };
-                positionQrPopover(lastQrCoords);
-            }
-        });
-
-        // 在加载后注入按钮（如果 tableRows 是服务端渲染，这一步会在页面打开时加上二维码按钮）
-        document.addEventListener('DOMContentLoaded', () => {
-            injectQrButtons();
-            // 如果表格有动态刷新逻辑，调用 injectQrButtons() 在刷新后再执行
         });
     </script>
 </body>
