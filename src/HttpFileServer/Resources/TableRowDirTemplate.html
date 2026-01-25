@@ -14,5 +14,8 @@
         <span class="text-blue-400 hover:text-blue-900 mr-3">
             <a href="./${file.name}/?download=1" target="_blank">打包下载</a>
         </span>
+        <button class="text-blue-400 hover:text-blue-900 mr-3" data-hover-share data-filename="${file.name}" onclick="shareFile(event)">
+            分享
+        </button>
     </td>
 </tr>

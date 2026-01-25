@@ -149,7 +149,7 @@ tr.row-hover {
     /* 更小字号 */
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     max-width: 280px;
-    max-height: 240px;
+    max-height: 280px;
     overflow: auto;
     z-index: 1000;
     line-height: 1.35;
@@ -300,7 +300,7 @@ tr.row-hover {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-    .theme-toggle-btn:hover {
-        background: var(--accent);
-        color: #fff;
-    }
+.theme-toggle-btn:hover {
+    background: var(--accent);
+    color: #fff;
+}

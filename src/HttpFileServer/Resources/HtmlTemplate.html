@@ -299,12 +299,12 @@
             }
             if (type === 'preview') {
                 previewHandle(fileName, coords, asPopover)
-                document.querySelector("#shareText").classList.remove("hidden");
+                document.querySelector("#shareText").classList.add("hidden");
                 document.querySelector("#prevBtn").classList.remove("hidden");
                 document.querySelector("#nextBtn").classList.remove("hidden");
             } else {
                 shareHandle(fileName, coords, asPopover)
-                document.querySelector("#shareText").classList.add("hidden");
+                document.querySelector("#shareText").classList.remove("hidden");
                 document.querySelector("#prevBtn").classList.add("hidden");
                 document.querySelector("#nextBtn").classList.add("hidden");
             }
