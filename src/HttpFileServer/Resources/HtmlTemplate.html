@@ -299,14 +299,15 @@
             }
             if (type === 'preview') {
                 previewHandle(fileName, coords, asPopover)
+                document.querySelector("#shareText").classList.remove("hidden");
                 document.querySelector("#prevBtn").classList.remove("hidden");
                 document.querySelector("#nextBtn").classList.remove("hidden");
             } else {
                 shareHandle(fileName, coords, asPopover)
+                document.querySelector("#shareText").classList.add("hidden");
                 document.querySelector("#prevBtn").classList.add("hidden");
                 document.querySelector("#nextBtn").classList.add("hidden");
             }
-            
         }
 
         function previewHandle(fileName, coords, asPopover) {
@@ -403,7 +404,7 @@
             const modal = document.getElementById('previewModal');
             const titleEl = document.getElementById('previewTitle');
             const contentEl = document.getElementById('previewContent');
-            const shareTextEl = document.getElementById('shareText')
+            const shareTextEl = document.getElementById('shareText');
             titleEl.textContent = fileName;
             contentEl.innerHTML = '';
             shareTextEl.innerText = shareUrl;
