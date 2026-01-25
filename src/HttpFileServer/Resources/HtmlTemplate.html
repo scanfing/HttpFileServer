@@ -127,13 +127,13 @@
             files = resultFilesArrays.flat().reverse();
 
             let dataStr = files.map(file => `
-                 <tr class='row-hover transition-colors'>
-                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
-                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
-                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
-                 <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
-                 </tr>
-                 `).join('');
+                         <tr class='row-hover transition-colors'>
+                         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
+                         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
+                         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
+                         <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
+                         </tr>
+                         `).join('');
 
             document.querySelector("#fileInfo").innerHTML = dataStr;
             const overview = document.getElementById('overview')
@@ -326,7 +326,7 @@
                     };
                     img.src = `./${fileName}`;
                     img.style.maxWidth = '260px';
-                } else if (['txt', 'md', 'html', 'js', 'css', 'json', 'log', 'xml'].includes(fileExtension)) {
+                } else if (['txt', 'md', 'html', 'js', 'css', 'json', 'log', 'xml', 'bat'].includes(fileExtension)) {
                     fetch(`./${fileName}`)
                         .then(r => r.text())
                         .then(text => {
@@ -361,7 +361,7 @@
                 contentEl.appendChild(el);
                 modal.classList.remove('hidden');
                 modal.style.display = 'flex';
-            } else if (['txt', 'md', 'html', 'js', 'css', 'json', 'log', 'xml'].includes(fileExtension)) {
+            } else if (['txt', 'md', 'html', 'js', 'css', 'json', 'log', 'xml', 'bat'].includes(fileExtension)) {
                 fetch(`./${fileName}`)
                     .then(r => r.text())
                     .then(text => {
