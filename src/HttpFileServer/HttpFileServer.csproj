@@ -86,10 +86,15 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
+    <Reference Include="QRCoder, Version=1.7.0.0, Culture=neutral, PublicKeyToken=c4ed5b9ae8358a28, processorArchitecture=MSIL">
+      <HintPath>..\packages\QRCoder.1.7.0\lib\net40\QRCoder.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
@@ -131,6 +136,7 @@
     <Compile Include="Handlers\IHttpHandler.cs" />
     <Compile Include="Handlers\WebHostGetHandler.cs" />
     <Compile Include="Handlers\WebHostHeadHandler.cs" />
+    <Compile Include="Models\NetworkAdapterModel.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -200,6 +206,7 @@
     </None>
     <Content Include="Resources\appstyle.css" />
     <Content Include="Resources\qrcode.min.js" />
+    <EmbeddedResource Include="Resources\QRCoder.dll" />
     <Content Include="Resources\tailwindcss.3.4.17.js" />
   </ItemGroup>
   <ItemGroup>
@@ -227,7 +234,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>

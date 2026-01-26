@@ -57,6 +57,11 @@ namespace HttpFileServer
                 var buff = DllResource.ICSharpCode_SharpZipLib;
                 return Assembly.Load(buff);
             }
+            else if ("QRCoder".Equals(assname))
+            {
+                var buff = DllResource.QRCoder;
+                return Assembly.Load(buff);
+            }
             return null;
         }
 

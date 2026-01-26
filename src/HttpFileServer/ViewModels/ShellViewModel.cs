@@ -15,6 +15,10 @@ using HttpFileServer.Servers;
 using HttpFileServer.Services;
 using HttpFileServer.Utils;
 using HttpFileServer.Views;
+using System.Linq;
+using System.Net.NetworkInformation;
+using System.Windows.Media.Imaging;
+using QRCoder;
 
 namespace HttpFileServer.ViewModels
 {
@@ -25,9 +29,18 @@ namespace HttpFileServer.ViewModels
         private ConfigService _cfgSrv;
         private Config _config;
         private bool _enableUpload = false;
+        private ImageSource _ipv4QrImage;
+        private string _ipv4Text;
+        private ImageSource _ipv6QrImage;
+        private string _ipv6Text;
         private bool _isRunning = false;
         private ushort _listenPort = 80;
         private string _logContent = string.Empty;
+        private bool _logIsReadOnly = false;
+        private ObservableCollection<NetworkAdapterModel> _networkAdapters = new ObservableCollection<NetworkAdapterModel>();
+        private NetworkAdapterModel _selectedNetworkAdapter;
+        private int _selectedTabIndex = 0;
+        private bool _shareTabEnabled = false;
         private string _sourceDir;
         private ServerStatus _status = ServerStatus.Ready;
         private string _themeMode = "Light";
@@ -48,6 +61,11 @@ namespace HttpFileServer.ViewModels
             CommandStartServer = new CommandImpl(OnRequestStartServer, CanStartServer);
             CommandStopServer = new CommandImpl(OnRequestStopServer, CanStopServer);
             CommandToggleTheme = new CommandImpl(OnToggleTheme);
+
+            // 默认：选中 配置 tab，分享禁用，日志在停止时可编辑
+            SelectedTabIndex = 0;
+            ShareTabEnabled = false;
+            LogIsReadOnly = IsRunning; // false by default
 
             _cfgSrv = new ConfigService();
 
@@ -99,6 +117,14 @@ namespace HttpFileServer.ViewModels
 
         public IFileServer FileServer { get; private set; }
 
+        public ImageSource IPv4QrImage { get => _ipv4QrImage; private set => SetProperty(ref _ipv4QrImage, value); }
+
+        public string IPv4Text { get => _ipv4Text; private set => SetProperty(ref _ipv4Text, value); }
+
+        public ImageSource IPv6QrImage { get => _ipv6QrImage; private set => SetProperty(ref _ipv6QrImage, value); }
+
+        public string IPv6Text { get => _ipv6Text; private set => SetProperty(ref _ipv6Text, value); }
+
         public bool IsRunning
         {
             get => _isRunning;
@@ -117,13 +143,45 @@ namespace HttpFileServer.ViewModels
             private set => SetProperty(ref _logContent, value);
         }
 
+        public bool LogIsReadOnly
+        {
+            get => _logIsReadOnly;
+            set => SetProperty(ref _logIsReadOnly, value);
+        }
+
         public bool MinimizeToTrayAfterAutoStart
         {
             get => _MinimizeToTrayAfterAutoStart;
             set => SetProperty(ref _MinimizeToTrayAfterAutoStart, value);
         }
 
+        public ObservableCollection<NetworkAdapterModel> NetworkAdapters { get => _networkAdapters; }
+
         public ObservableCollection<RequestModel> RequestModels { get; private set; }
+
+        public NetworkAdapterModel SelectedNetworkAdapter
+        {
+            get => _selectedNetworkAdapter;
+            set
+            {
+                if (SetProperty(ref _selectedNetworkAdapter, value))
+                {
+                    UpdateShareInfo();
+                }
+            }
+        }
+
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set => SetProperty(ref _selectedTabIndex, value);
+        }
+
+        public bool ShareTabEnabled
+        {
+            get => _shareTabEnabled;
+            set => SetProperty(ref _shareTabEnabled, value);
+        }
 
         public string SourceDir
         {
@@ -207,6 +265,9 @@ namespace HttpFileServer.ViewModels
             }
 
             Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
+
+            // Populate network adapters for Share tab
+            LoadNetworkAdapters();
         }
 
         protected override void OnViewUnLoaded(object sender)
@@ -294,6 +355,33 @@ namespace HttpFileServer.ViewModels
             });
         }
 
+        private ImageSource GenerateQrImage(string text)
+        {
+            try
+            {
+                using (var gen = new QRCodeGenerator())
+                {
+                    var data = gen.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+                    var pngQr = new PngByteQRCode(data);
+                    var pngBytes = pngQr.GetGraphic(10);
+                    using (var ms = new MemoryStream(pngBytes))
+                    {
+                        var img = new BitmapImage();
+                        img.BeginInit();
+                        img.CacheOption = BitmapCacheOption.OnLoad;
+                        img.StreamSource = ms;
+                        img.EndInit();
+                        img.Freeze();
+                        return img;
+                    }
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private ResourceDictionary GetWindowResources()
         {
             foreach (Window w in Application.Current.Windows)
@@ -302,6 +390,33 @@ namespace HttpFileServer.ViewModels
                     return w.Resources; // 当前窗口资源
             }
             return Application.Current.Resources; //退回应用级
+        }
+
+        private void LoadNetworkAdapters()
+        {
+            try
+            {
+                NetworkAdapters.Clear();
+                var nics = NetworkInterface.GetAllNetworkInterfaces()
+                    .Where(n => n.OperationalStatus == OperationalStatus.Up && n.NetworkInterfaceType != NetworkInterfaceType.Loopback);
+                foreach (var nic in nics)
+                {
+                    var props = nic.GetIPProperties();
+                    var addrs = props.UnicastAddresses
+                        .Where(u => u.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork || u.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+                        .Select(u => u.Address).ToArray();
+                    var model = new NetworkAdapterModel
+                    {
+                        Id = nic.Id,
+                        Name = string.IsNullOrWhiteSpace(nic.Description) ? nic.Name : nic.Description,
+                        IPv4 = addrs.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)?.ToString(),
+                        IPv6 = addrs.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)?.ToString()
+                    };
+                    NetworkAdapters.Add(model);
+                }
+                SelectedNetworkAdapter = NetworkAdapters.FirstOrDefault();
+            }
+            catch { }
         }
 
         private void OnRequestStartServer()
@@ -364,6 +479,10 @@ namespace HttpFileServer.ViewModels
             Status = ServerStatus.Running;
             CommandStartServer?.RaiseCanExecuteChanged();
             CommandStopServer?.RaiseCanExecuteChanged();
+            // Switch UI: show logs tab, enable share tab, make logs read-only
+            SelectedTabIndex = 1; // 日志 tab
+            ShareTabEnabled = true;
+            LogIsReadOnly = true;
         }
 
         private void OnRequestStopServer()
@@ -380,6 +499,10 @@ namespace HttpFileServer.ViewModels
             Status = ServerStatus.Stopped;
             CommandStartServer?.RaiseCanExecuteChanged();
             CommandStopServer?.RaiseCanExecuteChanged();
+            // Switch UI: show config tab, disable share tab, make logs editable/readable
+            SelectedTabIndex = 0; // 配置 tab
+            ShareTabEnabled = false;
+            LogIsReadOnly = false;
         }
 
         private void OnToggleTheme()
@@ -391,6 +514,45 @@ namespace HttpFileServer.ViewModels
             // 实时保存配置
             _config.ThemeMode = ThemeMode;
             _cfgSrv.SaveConfig(_config);
+        }
+
+        private void UpdateShareInfo()
+        {
+            if (SelectedNetworkAdapter == null)
+            {
+                IPv4QrImage = null;
+                IPv6QrImage = null;
+                IPv4Text = string.Empty;
+                IPv6Text = string.Empty;
+                return;
+            }
+
+            // Build URLs
+            if (!string.IsNullOrWhiteSpace(SelectedNetworkAdapter.IPv4))
+            {
+                var url = $"http://{SelectedNetworkAdapter.IPv4}:{ListenPort}/";
+                IPv4Text = url;
+                IPv4QrImage = GenerateQrImage(url);
+            }
+            else
+            {
+                IPv4Text = string.Empty;
+                IPv4QrImage = null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(SelectedNetworkAdapter.IPv6))
+            {
+                var ip = SelectedNetworkAdapter.IPv6;
+                if (ip.Contains("%")) ip = ip.Substring(0, ip.IndexOf('%'));
+                var url = $"http://[{ip}]:{ListenPort}/";
+                IPv6Text = url;
+                IPv6QrImage = GenerateQrImage(url);
+            }
+            else
+            {
+                IPv6Text = string.Empty;
+                IPv6QrImage = null;
+            }
         }
 
         #endregion Methods
