@@ -46,7 +46,9 @@ namespace HttpFileServer.Utils
                               "<td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500\">--</td>" +
                               "<td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500\">--</td>" +
                               "<td class=\"px-6 py-4 whitespace-nowrap text-sm text-gray-500\">上一级</td>" +
-                              "<td class=\"px-6 py-4 whitespace-nowrap text-sm font-medium\"></td></tr>");
+                              "<td class=\"px-6 py-4 whitespace-nowrap text-sm font-medium\">" +
+                              "<button class=\"text-blue-400 hover:text-blue-900 mr-3\"><a href=\"../\">上一级</a></button>" +
+                              "</td></tr>");
                 index++;
             }
 
