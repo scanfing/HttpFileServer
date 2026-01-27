@@ -47,6 +47,13 @@ namespace HttpFileServer.Servers
 
         #region Methods
 
+        public override void Stop()
+        {
+            base.Stop();
+            _cacheSrv.Clear();
+            _jsonCacheSrv.Clear();
+        }
+
         protected override void InitHandler()
         {
             RegisterHandler("HEAD", new HttpHeadHandler(_rootDir, _cacheSrv, _jsonCacheSrv, _jsonService));

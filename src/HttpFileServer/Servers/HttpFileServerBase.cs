@@ -88,7 +88,7 @@ namespace HttpFileServer.Servers
             RecordLog($"Web Server[{Port} @ {SourceDir} ] Started.");
         }
 
-        public void Stop()
+        public virtual void Stop()
         {
             _localFileSrv.Stop();
             _cts.Cancel();
