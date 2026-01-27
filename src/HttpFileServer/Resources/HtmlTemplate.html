@@ -413,12 +413,21 @@
         function shareHandle(fileName, coords, asPopover) {
             const shareUrl = location.href + fileName
             if (asPopover) {
-                new QRCode(popover, shareUrl)
+                // render a small popover QR that doesn't affect layout
+                popover.innerHTML = '';
+                const popSize = Math.min(160, Math.floor(window.innerWidth * 0.35));
+                try {
+                    new QRCode(popover, { text: shareUrl, width: popSize, height: popSize });
+                } catch (e) {
+                    // fallback for older qrcode lib signature
+                    new QRCode(popover, shareUrl);
+                }
                 requestAnimationFrame(() => {
                     positionPopover(coords);
                 })
                 return
             }
+
             const modal = document.getElementById('previewModal');
             const titleEl = document.getElementById('previewTitle');
             const contentEl = document.getElementById('previewContent');
@@ -426,7 +435,14 @@
             titleEl.textContent = fileName;
             contentEl.innerHTML = '';
             shareTextEl.innerText = shareUrl;
-            new QRCode(contentEl, shareUrl)
+            // render QR responsively so it fits on narrow screens
+            const maxModalWidth = Math.floor(window.innerWidth * 0.8);
+            const qrSize = Math.min(360, Math.max(120, maxModalWidth));
+            try {
+                new QRCode(contentEl, { text: shareUrl, width: qrSize, height: qrSize });
+            } catch (e) {
+                new QRCode(contentEl, shareUrl);
+            }
             modal.classList.remove('hidden');
             modal.style.display = 'flex';
         }

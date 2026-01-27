@@ -253,6 +253,24 @@ tr.row-hover {
     /* 图片最大高度，不超过视口高度减去标题和按钮的空间 */
 }
 
+/* Ensure QR canvas/image inside modal doesn't overflow on mobile */
+#previewModal canvas, #previewModal img, #previewModal svg {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 360px;
+    box-sizing: border-box;
+}
+
+#previewModal .content { max-height: 80vh; overflow: auto; }
+#previewModal #shareText { word-break: break-all; margin-top: 12px; }
+
+/* Popover QR sizing */
+#previewPopover canvas, #previewPopover img, #previewPopover svg {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 240px;
+}
+
 #previewModal pre {
     white-space: pre-wrap;
     word-wrap: break-word;
