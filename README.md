@@ -1,6 +1,6 @@
 # HttpFileServer
 
-http文件服务器 可用于局域网内目录浏览和文件下载、上传、图片预览、打包下载zip等功能
+http文件服务器 可用于局域网内目录浏览和文件下载、上传、图片预览、打包下载、二维码分享等功能
 
 http server for browse directory and download / upload files
 
@@ -33,6 +33,18 @@ http server for browse directory and download / upload files
 上传界面（暗色）
 ![网页上传界面 - Dark](images/web_upload_dark.png)
 
+文件预览（hover）
+![网页上传界面 - Light](images/filename_hover_preview.png)
+
+文件预览（模态）
+![网页上传界面 - Dark](images/file_preview.png)
+
+文件分享（hover）
+![网页上传界面 - Light](images/qr_code_hover_preview.png)
+
+文件分享（模态）
+![网页上传界面 - Dark](images/qr_code_share.png)
+
 JSON响应
 ![JSON响应界面](images/json_response.png)
 
@@ -44,6 +56,7 @@ JSON响应
 - 支持断点续传（Range 请求）。
 - 支持文件上传（multipart/form-data），但在默认配置中上传功能是关闭的，可在界面中开启。
 - 提供简单的防火墙辅助方法，可以在 Windows 上尝试添加防火墙例外端口或应用程序（程序会调用系统 COM 接口）。
+- 访问链接二维码分享
 
 - 支持界面主题（Light / Dark / System）。程序会根据系统主题自动选择，也可在主界面手动切换主题，当前主题会保存到配置中以便下次启动保持。暗色主题的截图已包含在文档中。
 

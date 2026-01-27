@@ -99,6 +99,22 @@
         function applyTheme(mode) {
             root.setAttribute('data-theme', mode);
         }
+
+        // Remove title attributes from an element and its descendants to prevent native tooltips
+        function removeTitleAttributes(root) {
+            if (!root) return;
+            try {
+                if (root.removeAttribute) root.removeAttribute('title');
+            } catch (e) { }
+            try {
+                var nodes = root.querySelectorAll && root.querySelectorAll('[title]');
+                if (nodes && nodes.length) {
+                    for (var i = 0; i < nodes.length; i++) {
+                        try { nodes[i].removeAttribute('title'); } catch (e) { }
+                    }
+                }
+            } catch (e) { }
+        }
         applyTheme(savedTheme ? savedTheme : (prefersDark.matches ? 'dark' : 'light'));
         prefersDark.addEventListener('change', e => {
             if (!localStorage.getItem('webTheme')) applyTheme(e.matches ? 'dark' : 'light');
@@ -285,7 +301,14 @@
         }
 
         function shareHandle(fileName, coords, asPopover) {
-            const shareUrl = location.href + fileName
+            let shareUrl = location.href + fileName;
+            try {
+                // prefer URL constructor to correctly resolve relative filenames and avoid double-encoding issues
+                shareUrl = new URL(fileName, location.href).href;
+            } catch (e) {
+                // fallback to simple concatenation
+                shareUrl = location.href + fileName;
+            }
             if (asPopover) {
                 // render a small popover QR that doesn't affect layout
                 popover.innerHTML = '';
@@ -296,6 +319,22 @@
                     // fallback for older qrcode lib signature
                     new QRCode(popover, shareUrl);
                 }
+                // 设置悬停提示为未转义的可读 URL（仅用于显示），但保持 QR 内容使用编码后的 shareUrl
+                try {
+                    let parsed = null;
+                    try { parsed = new URL(shareUrl, location.href); } catch (e) { parsed = null; }
+                    let display = shareUrl;
+                    if (parsed) {
+                        try {
+                            const decodedPath = decodeURIComponent(parsed.pathname);
+                            display = parsed.protocol + '//' + parsed.host + decodedPath + parsed.search + parsed.hash;
+                        } catch (e) {
+                            try { display = parsed.protocol + '//' + parsed.host + decodeURI(parsed.pathname) + parsed.search + parsed.hash; } catch (e2) { display = parsed.href; }
+                        }
+                    }
+                    popover.title = display;
+                    popover.setAttribute('aria-label', display);
+                } catch (e) { /* ignore */ }
                 requestAnimationFrame(() => {
                     positionPopover(coords);
                 })
@@ -308,7 +347,44 @@
             const shareTextEl = document.getElementById('shareText');
             titleEl.textContent = fileName;
             contentEl.innerHTML = '';
-            shareTextEl.innerText = shareUrl;
+            // 使用 innerHTML 以便不对分享链接进行转义，按照需要在服务器端保证内容安全
+            // 使用安全的 DOM 操作来插入分享链接：创建一个 `a` 元素并设置 `textContent`，
+            // 避免使用 `innerHTML` 导致的 XSS 风险，同时保持可点击并显示原始明文。
+            shareTextEl.innerHTML = '';
+            try {
+                const link = document.createElement('a');
+                // 解析 URL 以便仅解码 pathname 部分（将 %20 转为空格），同时保持 href 使用编码形式
+                let parsed = null;
+                try {
+                    parsed = new URL(shareUrl, location.href);
+                } catch (e) {
+                    parsed = null;
+                }
+                if (parsed && (parsed.protocol === 'http:' || parsed.protocol === 'https:')) {
+                    link.href = parsed.href;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    // 仅对 pathname 使用 decodeURIComponent，以显示可读的文件名/路径
+                    let decodedPath;
+                    try {
+                        decodedPath = decodeURIComponent(parsed.pathname);
+                    } catch (e) {
+                        try { decodedPath = decodeURI(parsed.pathname); } catch (e2) { decodedPath = parsed.pathname; }
+                    }
+                    const display = parsed.protocol + '//' + parsed.host + decodedPath + parsed.search + parsed.hash;
+                    link.textContent = display;
+                } else {
+                    // 非 HTTP(S) 或解析失败：安全回退，仅显示解码后的原始字符串（不可点击）
+                    let decoded;
+                    try { decoded = decodeURIComponent(shareUrl); } catch (e) { try { decoded = decodeURI(shareUrl); } catch (e2) { decoded = shareUrl; } }
+                    link.textContent = decoded;
+                    link.removeAttribute('href');
+                    link.style.cursor = 'default';
+                }
+                shareTextEl.appendChild(link);
+            } catch (e) {
+                shareTextEl.textContent = shareUrl;
+            }
             // render QR responsively so it fits on narrow screens
             const maxModalWidth = Math.floor(window.innerWidth * 0.8);
             const qrSize = Math.min(360, Math.max(120, maxModalWidth));
@@ -317,6 +393,8 @@
             } catch (e) {
                 new QRCode(contentEl, shareUrl);
             }
+            // Remove title attributes to avoid native tooltip showing on hover over modal content
+            removeTitleAttributes(modal);
             modal.classList.remove('hidden');
             modal.style.display = 'flex';
         }
