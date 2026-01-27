@@ -60,6 +60,14 @@ namespace HttpFileServer.Utils
                 row = row.Replace("${file.size}", "--");
                 row = row.Replace("${file.modified}", di.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
                 row = row.Replace("${file.type}", "--");
+                // replace fullPath if template contains it
+                try {
+                    var dirFull = di.FullName;
+                    var relDir = dirFull;
+                    if (!string.IsNullOrWhiteSpace(rootdir) && dirFull.StartsWith(rootdir, StringComparison.OrdinalIgnoreCase))
+                        relDir = dirFull.Substring(rootdir.Length).TrimStart('\\', '/');
+                    row = row.Replace("${file.fullPath}", HttpUtility.HtmlEncode(relDir));
+                } catch { }
                 sb.AppendLine(row);
                 index++;
             }
@@ -71,6 +79,14 @@ namespace HttpFileServer.Utils
                 row = row.Replace("${file.size}", SizeHelper.BytesToSize(fi.Length));
                 row = row.Replace("${file.modified}", fi.LastWriteTime.ToString("yyyy-MM-dd HH:mm:ss"));
                 row = row.Replace("${file.type}", fi.Extension);
+                // replace fullPath if template contains it
+                try {
+                    var fileFull = fi.FullName;
+                    var relFile = fileFull;
+                    if (!string.IsNullOrWhiteSpace(rootdir) && fileFull.StartsWith(rootdir, StringComparison.OrdinalIgnoreCase))
+                        relFile = fileFull.Substring(rootdir.Length).TrimStart('\\', '/');
+                    row = row.Replace("${file.fullPath}", HttpUtility.HtmlEncode(relFile));
+                } catch { }
                 sb.AppendLine(row);
                 index++;
             }

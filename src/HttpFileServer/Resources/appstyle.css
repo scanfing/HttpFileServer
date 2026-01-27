@@ -65,6 +65,27 @@ button {
     overflow-y: auto;
 }
 
+/* Lock the actions column to the right on small screens: make table horizontally scrollable but keep actions visible */
+@media (max-width: 640px) {
+    .table-container { position: relative; }
+    table { width: 100%; border-collapse: separate; }
+    /* Make the table body horizontally scrollable except actions column */
+    .table-container .table-inner { overflow-x: auto; }
+    /* Actions column fixed to right */
+    .file-actions {
+        position: sticky;
+        right: 0;
+        background: var(--panel-bg);
+        z-index: 10;
+        /* ensure separator */
+        box-shadow: -6px 0 8px rgba(0,0,0,0.06);
+        min-width: 120px;
+        text-align: right;
+    }
+    /* Prevent the actions cell from shrinking */
+    .file-actions button, .file-actions a { white-space: nowrap; }
+}
+
 .table-header {
     position: sticky;
     top: 0;
@@ -329,6 +350,24 @@ tr.row-hover {
 @media (hover: none) {
     tr.row-hover:hover { background: transparent; }
     .theme-toggle-header:hover { background: var(--panel-bg); }
+}
+
+/* Lock hover state for the actions column to improve UX: keep action buttons visible while row is hovered or when pointer is over the actions cell */
+.file-actions { position: relative; }
+.file-actions .text-blue-400 { opacity: 0.95; }
+
+/* On devices that support hover, keep actions shown while hovering the row or the actions cell */
+@media (hover: hover) {
+    tr.row-hover:hover .file-actions .text-blue-400,
+    .file-actions:hover .text-blue-400 {
+        visibility: visible;
+        opacity: 1;
+    }
+}
+
+/* On touch devices, ensure actions are tappable and visible */
+@media (hover: none) {
+    .file-actions .text-blue-400 { visibility: visible; opacity: 1; }
 }
 
 /* Make preview popover fixed so it won't change page flow/width when shown */
