@@ -19,6 +19,16 @@
                 <div class="flex items-center">
                     <h1 class="text-xl font-semibold text-primary">{{header}}</h1>
                 </div>
+                <!-- Theme toggle in header (desktop & mobile) -->
+                <div class="flex items-center">
+                    <button id="themeToggleHeader" class="theme-toggle-header" type="button" aria-label="切换主题">
+                        <!-- simple sun/moon icon -->
+                        <svg class="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 7a5 5 0 100 10 5 5 0 000-10z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="theme-text">切换主题</span>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -80,7 +90,7 @@
         </div>
     </div>
 
-    <!--主题切换按钮（固定右下角） -->
+    <!--主题切换按钮（固定右下角，桌面/大屏可见；移动端头部显示一个替代按钮） -->
     <button id="themeToggle" class="theme-toggle-btn" type="button">切换主题</button>
     {{uploadSection}}
     <script>
@@ -96,12 +106,18 @@
         prefersDark.addEventListener('change', e => {
             if (!localStorage.getItem('webTheme')) applyTheme(e.matches ? 'dark' : 'light');
         });
-        document.getElementById('themeToggle').addEventListener('click', () => {
+        const themeToggle = document.getElementById('themeToggle');
+        const themeToggleHeader = document.getElementById('themeToggleHeader');
+        // detect touch-capable devices and disable hover preview on those
+        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+        function handleThemeToggle() {
             const cur = root.getAttribute('data-theme');
             const next = cur === 'dark' ? 'light' : 'dark';
             applyTheme(next);
             localStorage.setItem('webTheme', next);
-        });
+        }
+        if (themeToggle) themeToggle.addEventListener('click', handleThemeToggle);
+        if (themeToggleHeader) themeToggleHeader.addEventListener('click', handleThemeToggle);
 
         // ===== 原有脚本保持 =====
         let files = [];
@@ -236,6 +252,7 @@
         const popover = document.getElementById('previewPopover');
 
         function startPreviewTimer(event, fileName, fileType) {
+            if (isTouch) return; // disable hover preview on touch devices
             // 如果是目录等不需要预览的类型可直接返回（根据实际类型值调整判断）
             if (!fileName || /dir|folder|directory/i.test(fileType)) return;
             cancelPreviewTimer();
@@ -247,6 +264,7 @@
         }
 
         function startShareTimer(event, fileName) {
+            if (isTouch) return; // disable hover share popover on touch devices
             cancelPreviewTimer();
             lastHoverCoords = { x: event.pageX, y: event.pageY };
             previewTimerId = setTimeout(() => {
@@ -415,11 +433,17 @@
 
         function shareFile(e) {
             const fileName = e.currentTarget.getAttribute('data-filename');
+            // ensure any hover popover is cancelled/hidden before opening modal
+            cancelPreviewTimer();
+            hidePreviewPopover();
             openPreviewOrShare(fileName, null, false, 'share');
         }
 
         function previewFile(e) {
             const fileName = e.currentTarget.getAttribute('data-filename');
+            // ensure any hover popover is cancelled/hidden before opening modal
+            cancelPreviewTimer();
+            hidePreviewPopover();
             openPreviewOrShare(fileName);
         }
 
