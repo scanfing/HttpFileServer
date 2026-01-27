@@ -37,6 +37,17 @@
         <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#F5F5F5" />
         <SolidColorBrush x:Key="PanelBorderBrush" Color="#DDDDDD" />
         <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6" />
+        <!--  Hyperlink style: use accent color and only show underline on hover  -->
+        <Style TargetType="Hyperlink">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="TextDecorations" Value="{x:Null}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="TextDecorations" Value="Underline" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
         <!--  按钮基础样式，防止深色主题下被默认模板改成白色高亮  -->
         <Style x:Key="BaseButton" TargetType="Button">
             <Setter Property="Foreground" Value="{DynamicResource WindowForegroundBrush}" />
@@ -336,10 +347,10 @@
                         <Border
                             Grid.Column="0"
                             Padding="6"
+                            VerticalAlignment="Stretch"
                             Background="{DynamicResource WindowBackgroundBrush}"
                             BorderBrush="{DynamicResource PanelBorderBrush}"
-                            BorderThickness="1"
-                            VerticalAlignment="Stretch">
+                            BorderThickness="1">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -357,11 +368,27 @@
                                     SelectedItem="{Binding SelectedNetworkAdapter, Mode=TwoWay}">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Padding="6" Margin="2" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource PanelBorderBrush}" BorderThickness="1" CornerRadius="4">
+                                            <Border
+                                                Margin="2"
+                                                Padding="6"
+                                                Background="{DynamicResource PanelBackgroundBrush}"
+                                                BorderBrush="{DynamicResource PanelBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="4">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding Name}" Foreground="{DynamicResource WindowForegroundBrush}" FontWeight="Bold" />
-                                                    <TextBlock Text="{Binding IPv4}" Foreground="{DynamicResource WindowForegroundBrush}" FontSize="12" />
-                                                    <TextBlock x:Name="tb6" Text="{Binding IPv6}" Foreground="{DynamicResource WindowForegroundBrush}" FontSize="12" />
+                                                    <TextBlock
+                                                        FontWeight="Bold"
+                                                        Foreground="{DynamicResource WindowForegroundBrush}"
+                                                        Text="{Binding Name}" />
+                                                    <TextBlock
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource WindowForegroundBrush}"
+                                                        Text="{Binding IPv4}" />
+                                                    <TextBlock
+                                                        x:Name="tb6"
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource WindowForegroundBrush}"
+                                                        Text="{Binding IPv6}" />
                                                 </StackPanel>
                                             </Border>
                                             <DataTemplate.Triggers>
@@ -398,12 +425,14 @@
                                                 Height="256"
                                                 Source="{Binding IPv4QrImage}" />
                                         </Viewbox>
-                                        <TextBox
+                                        <TextBlock
                                             Grid.Row="1"
-                                            Background="{DynamicResource PanelBackgroundBrush}"
-                                            Foreground="{DynamicResource WindowForegroundBrush}"
-                                            IsReadOnly="True"
-                                            Text="{Binding IPv4Text, Mode=OneWay}" />
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap">
+                                            <Hyperlink NavigateUri="{Binding IPv4Text}" RequestNavigate="Hyperlink_RequestNavigate">
+                                                <Run Text="{Binding IPv4Text, Mode=OneWay}" />
+                                            </Hyperlink>
+                                        </TextBlock>
                                     </Grid>
                                 </TabItem>
                                 <TabItem Header="IPv6">
@@ -418,12 +447,14 @@
                                                 Height="256"
                                                 Source="{Binding IPv6QrImage}" />
                                         </Viewbox>
-                                        <TextBox
+                                        <TextBlock
                                             Grid.Row="1"
-                                            Background="{DynamicResource PanelBackgroundBrush}"
-                                            Foreground="{DynamicResource WindowForegroundBrush}"
-                                            IsReadOnly="True"
-                                            Text="{Binding IPv6Text, Mode=OneWay}" />
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap">
+                                            <Hyperlink NavigateUri="{Binding IPv6Text}" RequestNavigate="Hyperlink_RequestNavigate">
+                                                <Run Text="{Binding IPv6Text, Mode=OneWay}" />
+                                            </Hyperlink>
+                                        </TextBlock>
                                     </Grid>
                                 </TabItem>
                             </TabControl>

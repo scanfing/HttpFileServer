@@ -11,6 +11,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Diagnostics;
+using System.Windows.Navigation;
 using HttpFileServer.Infrastructure;
 using HttpFileServer.Services;
 using HttpFileServer.ViewModels;
@@ -51,6 +53,16 @@ namespace HttpFileServer.Views
                 svm.Dispatcher = Dispatcher;
                 svm.UnLoadedCommand?.Execute(sender);
             }
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
+            }
+            catch { }
+            e.Handled = true;
         }
 
         #endregion Methods
