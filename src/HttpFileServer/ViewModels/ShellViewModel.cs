@@ -402,6 +402,25 @@ namespace HttpFileServer.ViewModels
             return Application.Current.Resources; //退回应用级
         }
 
+        private bool IsPortInUse(int port)
+        {
+            try
+            {
+                var ipProps = IPGlobalProperties.GetIPGlobalProperties();
+                var listeners = ipProps.GetActiveTcpListeners();
+                foreach (var ep in listeners)
+                {
+                    if (ep.Port == port)
+                        return true;
+                }
+            }
+            catch
+            {
+                // If check fails, conservatively assume port is not in use
+            }
+            return false;
+        }
+
         private void LoadNetworkAdapters()
         {
             try
@@ -434,17 +453,27 @@ namespace HttpFileServer.ViewModels
             if (IsRunning)
                 return;
 
+            // Check if desired port is already in use by another process
+            if (IsPortInUse(ListenPort))
+            {
+                LogContent += $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} 端口 {ListenPort} 已被占用，启动被拒绝。{Environment.NewLine}";
+                // Switch to logs tab so the user can see the failure message
+                SelectedTabIndex = 1; // 日志 tab
+                // Server not running, ensure logs are editable/readable
+                LogIsReadOnly = false;
+                // Sharing remains disabled when server failed to start
+                ShareTabEnabled = false;
+                return;
+            }
+
             Directory.CreateDirectory(SourceDir);
 
             // If application started with --debug-resource, prefer HtmlDebugServer
             string debugRes = null;
-            try
-            {
-                var app = System.Windows.Application.Current as App;
-                if (app != null)
-                    debugRes = app.DebugResourcePath;
-            }
-            catch { }
+
+            var app = System.Windows.Application.Current as App;
+            if (app != null)
+                debugRes = app.DebugResourcePath;
 
             if (!string.IsNullOrWhiteSpace(debugRes))
             {
