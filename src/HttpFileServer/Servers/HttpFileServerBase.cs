@@ -91,11 +91,44 @@ namespace HttpFileServer.Servers
         public virtual void Stop()
         {
             _localFileSrv.Stop();
-            _cts.Cancel();
-            _listener.Stop();
+            try
+            {
+                _localFileSrv.Stop();
+            }
+            catch { }
+
+            try
+            {
+                _cts?.Cancel();
+            }
+            catch { }
+
+            try
+            {
+                _listener?.Stop();
+            }
+            catch { }
+
+            try
+            {
+                // Close to release underlying socket and URI reservations
+                _listener?.Close();
+            }
+            catch { }
+
+            try
+            {
+                _cts?.Dispose();
+            }
+            catch { }
+
+            // Clear fields to allow GC and avoid accidental reuse
+            try { _listener = null; } catch { }
+            try { _cts = null; } catch { }
 
             if (IsFirewallOpened)
                 FirewallHelper.NetFwDelPort(Port, "TCP");
+            IsFirewallOpened = false;
             RecordLog($"Web Server[{Port} @ {SourceDir} ] Stopped.");
         }
 

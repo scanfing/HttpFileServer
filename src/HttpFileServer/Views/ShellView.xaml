@@ -164,7 +164,8 @@
                         Background="{DynamicResource PanelBackgroundBrush}"
                         BorderBrush="{DynamicResource PanelBorderBrush}"
                         Foreground="{DynamicResource WindowForegroundBrush}"
-                        Text="{Binding ListenPort, UpdateSourceTrigger=PropertyChanged}" />
+                        Text="{Binding ListenPort, UpdateSourceTrigger=PropertyChanged}"
+                        IsEnabled="{Binding IsRunning, Converter={StaticResource boolReverse}}" />
                 </WrapPanel>
             </Grid>
             <Grid Margin="0,4">

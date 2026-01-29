@@ -134,7 +134,17 @@ namespace HttpFileServer.ViewModels
         public ushort ListenPort
         {
             get => _listenPort;
-            set => SetProperty(ref _listenPort, value);
+            set
+            {
+                // Prevent changing the listen port while server is running
+                if (IsRunning)
+                    return;
+                if (SetProperty(ref _listenPort, value))
+                {
+                    // Update share info in UI to reflect new port immediately
+                    UpdateShareInfo();
+                }
+            }
         }
 
         public string LogContent
@@ -477,6 +487,8 @@ namespace HttpFileServer.ViewModels
 
             IsRunning = true;
             Status = ServerStatus.Running;
+            // Ensure share info (QR and text) reflect the currently active port
+            UpdateShareInfo();
             CommandStartServer?.RaiseCanExecuteChanged();
             CommandStopServer?.RaiseCanExecuteChanged();
             // Switch UI: show logs tab, enable share tab, make logs read-only
@@ -495,6 +507,10 @@ namespace HttpFileServer.ViewModels
             FileServer.LogGenerated -= FileServer_LogGenerated;
             FileServer.NewReqeustIn -= FileServer_NewReqeustIn;
             FileServer.RequestOut -= FileServer_RequestOut;
+            // release reference to allow new server instance with different port
+            FileServer = null;
+            // Refresh share info to clear/reflect stopped state
+            UpdateShareInfo();
             IsRunning = false;
             Status = ServerStatus.Stopped;
             CommandStartServer?.RaiseCanExecuteChanged();
@@ -518,41 +534,51 @@ namespace HttpFileServer.ViewModels
 
         private void UpdateShareInfo()
         {
-            if (SelectedNetworkAdapter == null)
+            // Ensure updates happen on the UI thread
+            var uiDispatcher = Dispatcher ?? Application.Current?.Dispatcher;
+            Action work = () =>
             {
-                IPv4QrImage = null;
-                IPv6QrImage = null;
-                IPv4Text = string.Empty;
-                IPv6Text = string.Empty;
-                return;
-            }
+                if (SelectedNetworkAdapter == null)
+                {
+                    IPv4QrImage = null;
+                    IPv6QrImage = null;
+                    IPv4Text = string.Empty;
+                    IPv6Text = string.Empty;
+                    return;
+                }
 
-            // Build URLs
-            if (!string.IsNullOrWhiteSpace(SelectedNetworkAdapter.IPv4))
-            {
-                var url = $"http://{SelectedNetworkAdapter.IPv4}:{ListenPort}/";
-                IPv4Text = url;
-                IPv4QrImage = GenerateQrImage(url);
-            }
-            else
-            {
-                IPv4Text = string.Empty;
-                IPv4QrImage = null;
-            }
+                // Build URLs
+                if (!string.IsNullOrWhiteSpace(SelectedNetworkAdapter.IPv4))
+                {
+                    var url = $"http://{SelectedNetworkAdapter.IPv4}:{ListenPort}/";
+                    IPv4Text = url;
+                    IPv4QrImage = GenerateQrImage(url);
+                }
+                else
+                {
+                    IPv4Text = string.Empty;
+                    IPv4QrImage = null;
+                }
 
-            if (!string.IsNullOrWhiteSpace(SelectedNetworkAdapter.IPv6))
-            {
-                var ip = SelectedNetworkAdapter.IPv6;
-                if (ip.Contains("%")) ip = ip.Substring(0, ip.IndexOf('%'));
-                var url = $"http://[{ip}]:{ListenPort}/";
-                IPv6Text = url;
-                IPv6QrImage = GenerateQrImage(url);
-            }
+                if (!string.IsNullOrWhiteSpace(SelectedNetworkAdapter.IPv6))
+                {
+                    var ip = SelectedNetworkAdapter.IPv6;
+                    if (ip.Contains("%")) ip = ip.Substring(0, ip.IndexOf('%'));
+                    var url = $"http://[{ip}]:{ListenPort}/";
+                    IPv6Text = url;
+                    IPv6QrImage = GenerateQrImage(url);
+                }
+                else
+                {
+                    IPv6Text = string.Empty;
+                    IPv6QrImage = null;
+                }
+            };
+
+            if (uiDispatcher != null && !uiDispatcher.CheckAccess())
+                uiDispatcher.BeginInvoke(work);
             else
-            {
-                IPv6Text = string.Empty;
-                IPv6QrImage = null;
-            }
+                work();
         }
 
         #endregion Methods
