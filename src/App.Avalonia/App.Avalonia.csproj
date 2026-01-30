@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <RootNamespace>App.Analonia</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

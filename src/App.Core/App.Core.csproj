@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Utils\" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
     </ItemGroup>
 
 </Project>

@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpFileServer", "HttpFileS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Core", "App.Core\App.Core.csproj", "{8B249DB0-CCBE-4A59-BBDF-9386C162FC62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Analonia", "App.Analonia\App.Analonia.csproj", "{666E5CCE-3C78-4F86-9D3C-8D09D430C2AA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Avalonia", "App.Avalonia\App.Avalonia.csproj", "{666E5CCE-3C78-4F86-9D3C-8D09D430C2AA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Platform.Windows", "App.Platform.Windows\App.Platform.Windows.csproj", "{C62D0470-77C8-40EC-8592-877CCD71DCBF}"
 EndProject
