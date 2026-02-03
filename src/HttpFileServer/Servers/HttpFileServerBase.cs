@@ -220,7 +220,7 @@ namespace HttpFileServer.Servers
 
         private void RunServerLoop()
         {
-            while (!_cts.Token.IsCancellationRequested)
+            while (_cts != null && !_cts.Token.IsCancellationRequested)
             {
                 try
                 {
