@@ -310,6 +310,8 @@ namespace HttpFileServer.ViewModels
                 dict["PanelBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0x2A, 0x2A, 0x2A));
                 dict["PanelBorderBrush"] = new SolidColorBrush(Color.FromRgb(0x44, 0x44, 0x44));
                 dict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
+                // softer off-white for QR background in dark mode to reduce glare
+                dict["QrBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0xEE, 0xEE, 0xEE));
             }
             else // Light
             {
@@ -318,6 +320,8 @@ namespace HttpFileServer.ViewModels
                 dict["PanelBackgroundBrush"] = new SolidColorBrush(Color.FromRgb(0xF5, 0xF5, 0xF5));
                 dict["PanelBorderBrush"] = new SolidColorBrush(Color.FromRgb(0xDD, 0xDD, 0xDD));
                 dict["AccentBrush"] = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
+                // standard white QR background in light mode
+                dict["QrBackgroundBrush"] = new SolidColorBrush(Colors.White);
             }
         }
 

@@ -37,6 +37,12 @@
         <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#F5F5F5" />
         <SolidColorBrush x:Key="PanelBorderBrush" Color="#DDDDDD" />
         <SolidColorBrush x:Key="AccentBrush" Color="#3B82F6" />
+        <!-- Subtle accent for selections in dark mode (semi-transparent) -->
+        <SolidColorBrush x:Key="AccentBrushSubtle" Color="#333B82F6" />
+        <!-- Inner frame for QR: semi-transparent black to reduce glare in dark mode -->
+        <SolidColorBrush x:Key="InnerFrameBrush" Color="#88000000" />
+        <!-- QR background can be themed to a softer color instead of pure white -->
+        <SolidColorBrush x:Key="QrBackgroundBrush" Color="#FFFFFFFF" />
         <!--  Hyperlink style: use accent color and only show underline on hover  -->
         <Style TargetType="Hyperlink">
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
@@ -103,6 +109,44 @@
             <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
             <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource PanelBorderBrush}" />
             <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource PanelBorderBrush}" />
+        </Style>
+        <!-- Themed ListBox for dark mode: use panel background and accent selection -->
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource WindowForegroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="ScrollViewer.Background" Value="{DynamicResource PanelBackgroundBrush}" />
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="Foreground" Value="{DynamicResource WindowForegroundBrush}" />
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="2" Margin="0">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrushSubtle}" />
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                            <Setter Property="Foreground" Value="White" />
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrushSubtle}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="ThemedDataGridHeader" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="{DynamicResource PanelBorderBrush}" />
@@ -226,6 +270,40 @@
             <TabControl.ItemContainerStyle>
                 <Style TargetType="TabItem">
                     <Setter Property="Width" Value="120" />
+                    <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource WindowForegroundBrush}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="Padding" Value="8,4" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Border
+                                    x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4"
+                                    Padding="{TemplateBinding Padding}"
+                                    Margin="2,0">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" ContentSource="Header" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                        <Setter Property="Foreground" Value="White" />
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                        <Setter Property="Foreground" Value="White" />
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter TargetName="Bd" Property="Opacity" Value="0.5" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
                 </Style>
             </TabControl.ItemContainerStyle>
             <TabItem Header="配置">
@@ -349,7 +427,7 @@
                             Grid.Column="0"
                             Padding="6"
                             VerticalAlignment="Stretch"
-                            Background="{DynamicResource WindowBackgroundBrush}"
+                            Background="{DynamicResource PanelBackgroundBrush}"
                             BorderBrush="{DynamicResource PanelBorderBrush}"
                             BorderThickness="1">
                             <Grid>
@@ -366,15 +444,16 @@
                                     Grid.Row="1"
                                     VerticalAlignment="Stretch"
                                     ItemsSource="{Binding NetworkAdapters}"
-                                    SelectedItem="{Binding SelectedNetworkAdapter, Mode=TwoWay}">
+                                    SelectedItem="{Binding SelectedNetworkAdapter, Mode=TwoWay}"
+                                    FocusVisualStyle="{x:Null}">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Border
                                                 Margin="2"
                                                 Padding="6"
-                                                Background="{DynamicResource PanelBackgroundBrush}"
-                                                BorderBrush="{DynamicResource PanelBorderBrush}"
-                                                BorderThickness="1"
+                                                Background="Transparent"
+                                                BorderBrush="Transparent"
+                                                BorderThickness="0"
                                                 CornerRadius="4">
                                                 <StackPanel>
                                                     <TextBlock
@@ -410,10 +489,49 @@
                         <Border
                             Grid.Column="2"
                             Padding="6"
-                            Background="{DynamicResource WindowBackgroundBrush}"
+                            Background="{DynamicResource PanelBackgroundBrush}"
                             BorderBrush="{DynamicResource PanelBorderBrush}"
                             BorderThickness="1">
-                            <TabControl>
+                            <TabControl Background="{DynamicResource PanelBackgroundBrush}">
+                                <TabControl.ItemContainerStyle>
+                                    <Style TargetType="TabItem">
+                                        <Setter Property="Width" Value="Auto" />
+                                        <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+                                        <Setter Property="Foreground" Value="{DynamicResource WindowForegroundBrush}" />
+                                        <Setter Property="BorderBrush" Value="{DynamicResource PanelBorderBrush}" />
+                                        <Setter Property="BorderThickness" Value="1" />
+                                        <Setter Property="Padding" Value="6,2" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="TabItem">
+                                                    <Border
+                                                        x:Name="Bd"
+                                                        Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="3"
+                                                        Padding="{TemplateBinding Padding}"
+                                                        Margin="0,0,4,0">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" ContentSource="Header" />
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                                            <Setter Property="Foreground" Value="White" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentBrushSubtle}" />
+                                                            <Setter Property="Foreground" Value="White" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter TargetName="Bd" Property="Opacity" Value="0.5" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </TabControl.ItemContainerStyle>
                                 <TabItem Header="IPv4">
                                     <Grid>
                                         <Grid.RowDefinitions>
@@ -421,10 +539,15 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         <Viewbox Margin="8" Stretch="Uniform">
-                                            <Image
-                                                Width="256"
-                                                Height="256"
-                                                Source="{Binding IPv4QrImage}" />
+                                            <Border Background="{DynamicResource PanelBackgroundBrush}" Padding="8">
+                                                <!-- dark inner frame around the white QR area to reduce glare -->
+                                                <Border Background="{DynamicResource QrBackgroundBrush}" BorderBrush="Transparent" BorderThickness="0" CornerRadius="2">
+                                                    <Image
+                                                        Width="256"
+                                                        Height="256"
+                                                        Source="{Binding IPv4QrImage}" />
+                                                </Border>
+                                            </Border>
                                         </Viewbox>
                                         <TextBlock
                                             Grid.Row="1"
@@ -443,10 +566,15 @@
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
                                         <Viewbox Margin="8" Stretch="Uniform">
-                                            <Image
-                                                Width="256"
-                                                Height="256"
-                                                Source="{Binding IPv6QrImage}" />
+                                            <Border Background="{DynamicResource PanelBackgroundBrush}" Padding="8">
+                                                <!-- dark inner frame around the white QR area to reduce glare -->
+                                                <Border Background="{DynamicResource QrBackgroundBrush}" BorderBrush="Transparent" BorderThickness="0" CornerRadius="2">
+                                                    <Image
+                                                        Width="256"
+                                                        Height="256"
+                                                        Source="{Binding IPv6QrImage}" />
+                                                </Border>
+                                            </Border>
                                         </Viewbox>
                                         <TextBlock
                                             Grid.Row="1"
