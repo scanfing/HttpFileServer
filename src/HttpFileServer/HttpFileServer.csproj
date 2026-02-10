@@ -121,6 +121,7 @@
       <DependentUpon>PathSelector.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converters\BoolReverseConverter.cs" />
+    <Compile Include="Converters\SubtractConverter.cs" />
     <Compile Include="Core\Config.cs" />
     <Compile Include="Core\DirInfoResponse.cs" />
     <Compile Include="Core\DirPathInfo.cs" />

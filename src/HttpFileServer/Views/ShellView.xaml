@@ -24,6 +24,7 @@
     </Window.DataContext>
     <Window.Resources>
         <converters:BoolReverseConverter x:Key="boolReverse" />
+        <converters:SubtractConverter x:Key="subtractConverter" />
         <!--  初始主题色（浅色），ViewModel 动态替换  -->
         <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="WindowForegroundBrush" Color="#111111" />
@@ -416,11 +417,13 @@
                     Background="{DynamicResource PanelBackgroundBrush}"
                     BorderBrush="{DynamicResource PanelBorderBrush}"
                     BorderThickness="1">
-                    <Grid>
+                    <Grid x:Name="ShareGrid">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="260" />
+                            <!-- Left column auto-sizes to content; right column takes remaining space with a minimum width -->
+                            <!-- Left column auto-sizes to content but will not exceed the available width minus the right pane's minimum and splitter width -->
+                            <ColumnDefinition x:Name="LeftColumn" Width="Auto" MaxWidth="{Binding ActualWidth, ElementName=ShareGrid, Converter={StaticResource subtractConverter}, ConverterParameter=208}" />
                             <ColumnDefinition Width="8" />
-                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="1*" MinWidth="200" />
                         </Grid.ColumnDefinitions>
                         <!--  Left: adapter list  -->
                         <Border
@@ -484,6 +487,17 @@
                                 </ListBox>
                             </Grid>
                         </Border>
+
+                        <!--  GridSplitter to allow manual adjustment of the left adapter pane width -->
+                        <GridSplitter
+                            Grid.Column="1"
+                            Width="8"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            ResizeBehavior="PreviousAndNext"
+                            ShowsPreview="False"
+                            Background="{DynamicResource PanelBorderBrush}"
+                            ToolTip="拖动以调整左侧网络适配器宽度" />
 
                         <!--  Right: IPv4 / IPv6 tabs  -->
                         <Border
