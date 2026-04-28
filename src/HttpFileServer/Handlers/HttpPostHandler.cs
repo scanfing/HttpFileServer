@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
+﻿using System.Net;
 using System.Threading.Tasks;
-using HttpFileServer.Web;
 
 namespace HttpFileServer.Handlers
 {
@@ -35,10 +29,7 @@ namespace HttpFileServer.Handlers
             if (context.Request.HttpMethod.ToUpper() != "POST")
                 return;
 
-            if (request.ContentType.StartsWith("multipart/form-data;", StringComparison.OrdinalIgnoreCase))
-                await _postFileHandler.ProcessRequest(context);
-            else
-                response.StatusCode = (int)HttpStatusCode.Forbidden;
+            await _postFileHandler.ProcessRequest(context);
         }
 
         #endregion Methods

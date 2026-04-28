@@ -25,6 +25,7 @@
     <Window.Resources>
         <converters:BoolReverseConverter x:Key="boolReverse" />
         <converters:SubtractConverter x:Key="subtractConverter" />
+        <converters:StringToUriConverter x:Key="stringToUri" />
         <!--  初始主题色（浅色），ViewModel 动态替换  -->
         <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="WindowForegroundBrush" Color="#111111" />
@@ -600,7 +601,7 @@
                                             Grid.Row="1"
                                             TextAlignment="Center"
                                             TextWrapping="Wrap">
-                                            <Hyperlink NavigateUri="{Binding IPv4Text}" RequestNavigate="Hyperlink_RequestNavigate">
+                                            <Hyperlink NavigateUri="{Binding IPv4Text, Converter={StaticResource stringToUri}}" RequestNavigate="Hyperlink_RequestNavigate">
                                                 <Run Text="{Binding IPv4Text, Mode=OneWay}" />
                                             </Hyperlink>
                                         </TextBlock>
@@ -627,7 +628,7 @@
                                             Grid.Row="1"
                                             TextAlignment="Center"
                                             TextWrapping="Wrap">
-                                            <Hyperlink NavigateUri="{Binding IPv6Text}" RequestNavigate="Hyperlink_RequestNavigate">
+                                            <Hyperlink NavigateUri="{Binding IPv6Text, Converter={StaticResource stringToUri}}" RequestNavigate="Hyperlink_RequestNavigate">
                                                 <Run Text="{Binding IPv6Text, Mode=OneWay}" />
                                             </Hyperlink>
                                         </TextBlock>

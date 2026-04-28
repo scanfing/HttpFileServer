@@ -105,17 +105,19 @@
   this.setupEventListeners();
   this.onComplete = null;
  }
- // 修复上传：使用固定字段名 file，并附带 relativePath；进度用 xhr.upload.onprogress
+ // 每次只上传一个文件，将文件目标路径拼接到 POST URL 中；进度用 xhr.upload.onprogress
  UploadManager.prototype.simulateUpload = function(file, progressEle) {
   var uploadServer = this.uploadServer;
   return new Promise(function(resolve, reject) {
-   var fd = new FormData();
    var rawPath = file.fullPath || file.webkitRelativePath || file.name;
    var relPath = rawPath.replace(/^\\/, '').replace(/^\//, '');
-   fd.append('file', file, file.name);
-   fd.append('relativePath', relPath);
+   // 对路径各段单独编码后拼接到上传地址，使 POST URL 即为目标文件路径
+   var encodedPath = relPath.split('/').map(function(s) { return encodeURIComponent(s); }).join('/');
+   var targetUrl = uploadServer + encodedPath;
    var xhr = new XMLHttpRequest();
-   xhr.open('POST', uploadServer, true);
+   xhr.open('POST', targetUrl, true);
+   // 直接发送文件二进制流，不使用 multipart，无文件大小限制
+   xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
    xhr.onreadystatechange = function() {
     if (xhr.readyState === 4) {
      if (xhr.status === 200) {
@@ -139,7 +141,7 @@
     if (progressEle) progressEle.innerText = '上传错误';
     reject(new Error('Network error'));
    };
-   xhr.send(fd);
+   xhr.send(file);
   });
  };
  UploadManager.prototype.addFiles = function(files) {
