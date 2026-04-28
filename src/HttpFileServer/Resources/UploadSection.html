@@ -33,153 +33,283 @@
  </div>
 </div>
 <script>
- class ConcurrentUploadQueue {
- constructor(maxConcurrent=3){ this.maxConcurrent=maxConcurrent; this.running=0; this.queue=[]; this.completed=0; this.total=0; this.results=[]; this.errors=[]; this.onProgress=null; this.onComplete=null; this.onError=null; }
- addTask(uploadFunction, file, options={}){ return new Promise((resolve,reject)=>{ this.queue.push({ uploadFunction, file, options, resolve, reject }); this.total++; }); }
- startTask(){ this._next(); }
- _next(){ if(this.running>=this.maxConcurrent || this.queue.length===0) return; const task=this.queue.shift(); this.running++; this._updateProgress(); task.uploadFunction(task.file, task.options).then(result=>{ this.results.push({file:task.file,result,timestamp:new Date()}); task.resolve(result); }).catch(error=>{ this.errors.push({file:task.file,error,timestamp:new Date()}); task.reject(error); if(this.onError) this.onError(error, task.file); }).finally(()=>{ this.running--; this.completed++; this._updateProgress(); if(this.completed===this.total && this.running===0) this._onComplete(); this._next(); }); if(this.running<this.maxConcurrent && this.queue.length>0) this._next(); }
- _updateProgress(){ if(!this.onProgress) return; this.onProgress({ completed:this.completed, total:this.total, running:this.running, queued:this.queue.length, progress:this.total>0?(this.completed/this.total)*100:0 }); }
- _onComplete(){ if(this.onComplete) this.onComplete({results:this.results, errors:this.errors, total:this.total, completed:this.completed}); }
- setConcurrency(v){ this.maxConcurrent=v; while(this.running<this.maxConcurrent && this.queue.length>0) this._next(); }
- getStatus(){ return { running:this.running, queued:this.queue.length, completed:this.completed, total:this.total, progress:this.total>0?(this.completed/this.total)*100:0, results:this.results, errors:this.errors }; }
- clear(){ this.running=0; this.queue=[]; this.completed=0; this.total=0; this.results=[]; this.errors=[]; }
+ function ConcurrentUploadQueue(maxConcurrent) {
+  this.maxConcurrent = (maxConcurrent !== undefined) ? maxConcurrent : 3;
+  this.running = 0;
+  this.queue = [];
+  this.completed = 0;
+  this.total = 0;
+  this.results = [];
+  this.errors = [];
+  this.onProgress = null;
+  this.onComplete = null;
+  this.onError = null;
  }
- class UploadManager {
- constructor(){ this.uploadServer = window.location.pathname.endsWith('/')? window.location.pathname : window.location.pathname + '/'; this.queue=new ConcurrentUploadQueue(3); this.setupEventListeners(); this.onComplete=null; }
+ ConcurrentUploadQueue.prototype.addTask = function(uploadFunction, file, options) {
+  if (options === undefined) options = {};
+  var self = this;
+  return new Promise(function(resolve, reject) {
+   self.queue.push({ uploadFunction: uploadFunction, file: file, options: options, resolve: resolve, reject: reject });
+   self.total++;
+  });
+ };
+ ConcurrentUploadQueue.prototype.startTask = function() { this._next(); };
+ ConcurrentUploadQueue.prototype._next = function() {
+  if (this.running >= this.maxConcurrent || this.queue.length === 0) return;
+  var task = this.queue.shift();
+  this.running++;
+  var self = this;
+  this._updateProgress();
+  task.uploadFunction(task.file, task.options).then(function(result) {
+   self.results.push({ file: task.file, result: result, timestamp: new Date() });
+   task.resolve(result);
+   self.running--;
+   self.completed++;
+   self._updateProgress();
+   if (self.completed === self.total && self.running === 0) self._onComplete();
+   self._next();
+  }, function(error) {
+   self.errors.push({ file: task.file, error: error, timestamp: new Date() });
+   task.reject(error);
+   if (self.onError) self.onError(error, task.file);
+   self.running--;
+   self.completed++;
+   self._updateProgress();
+   if (self.completed === self.total && self.running === 0) self._onComplete();
+   self._next();
+  });
+  if (this.running < this.maxConcurrent && this.queue.length > 0) this._next();
+ };
+ ConcurrentUploadQueue.prototype._updateProgress = function() {
+  if (!this.onProgress) return;
+  this.onProgress({ completed: this.completed, total: this.total, running: this.running, queued: this.queue.length, progress: this.total > 0 ? (this.completed / this.total) * 100 : 0 });
+ };
+ ConcurrentUploadQueue.prototype._onComplete = function() {
+  if (this.onComplete) this.onComplete({ results: this.results, errors: this.errors, total: this.total, completed: this.completed });
+ };
+ ConcurrentUploadQueue.prototype.setConcurrency = function(v) {
+  this.maxConcurrent = v;
+  while (this.running < this.maxConcurrent && this.queue.length > 0) this._next();
+ };
+ ConcurrentUploadQueue.prototype.getStatus = function() {
+  return { running: this.running, queued: this.queue.length, completed: this.completed, total: this.total, progress: this.total > 0 ? (this.completed / this.total) * 100 : 0, results: this.results, errors: this.errors };
+ };
+ ConcurrentUploadQueue.prototype.clear = function() {
+  this.running = 0; this.queue = []; this.completed = 0; this.total = 0; this.results = []; this.errors = [];
+ };
+
+ function UploadManager() {
+  var pathname = window.location.pathname;
+  this.uploadServer = pathname.charAt(pathname.length - 1) === '/' ? pathname : pathname + '/';
+  this.queue = new ConcurrentUploadQueue(3);
+  this.setupEventListeners();
+  this.onComplete = null;
+ }
  // 修复上传：使用固定字段名 file，并附带 relativePath；进度用 xhr.upload.onprogress
- async simulateUpload(file, progressEle){ return new Promise((resolve,reject)=>{ const fd = new FormData(); const relPath = (file.fullPath || file.webkitRelativePath || file.name).replace(/^\\/,'').replace(/^\//,''); fd.append('file', file, file.name); fd.append('relativePath', relPath); const xhr = new XMLHttpRequest(); xhr.open('POST', this.uploadServer, true); xhr.onreadystatechange = function(){ if(xhr.readyState===4){ if(xhr.status===200){ progressEle && (progressEle.innerText='上传完毕'); try{ resolve(JSON.parse(xhr.responseText)); }catch{ resolve(xhr.responseText); } } else { progressEle && (progressEle.innerText='上传失败'); reject(new Error('HTTP '+xhr.status)); } } }; xhr.upload.onprogress = (e)=>{ if(e.lengthComputable){ const p = ((e.loaded/e.total)*100).toFixed(2); progressEle && (progressEle.innerText = `上传中：${p}%`); } }; xhr.onerror = ()=>{ progressEle && (progressEle.innerText='上传错误'); reject(new Error('Network error')); }; xhr.send(fd); }); }
- addFiles(files){ return new Promise(resolve=>{ for(const item of files){ this.queue.addTask(this.simulateUpload.bind(this), item.file, item.progressEle).then(()=>{}).catch(()=>{}); } resolve(); }); }
- setupEventListeners(){ this.queue.onProgress=(p)=>{ const overview=document.getElementById('overview'); if(overview) overview.innerText=`进度: ${p.completed}/${p.total} |运行中: ${p.running} | 等待中: ${p.queued}`; }; this.queue.onComplete=(s)=>{ this.onComplete && this.onComplete(s); }; this.queue.onError=(err,file)=>{ console.error('上传错误:', file && file.name, err); }; }
- clear(){ this.queue.clear(); const overview=document.getElementById('overview'); if(overview) overview.innerText=''; }
- }
- // 刷新确认：上传完成后点击“确定”刷新当前页面
- function confirmAndReload(){
- try{ document.querySelector('#uploadModal').classList.add('hidden'); }catch{}
- try{ uploadManager && uploadManager.clear && uploadManager.clear(); }catch{}
- window.location.reload();
+ UploadManager.prototype.simulateUpload = function(file, progressEle) {
+  var uploadServer = this.uploadServer;
+  return new Promise(function(resolve, reject) {
+   var fd = new FormData();
+   var rawPath = file.fullPath || file.webkitRelativePath || file.name;
+   var relPath = rawPath.replace(/^\\/, '').replace(/^\//, '');
+   fd.append('file', file, file.name);
+   fd.append('relativePath', relPath);
+   var xhr = new XMLHttpRequest();
+   xhr.open('POST', uploadServer, true);
+   xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+     if (xhr.status === 200) {
+      if (progressEle) progressEle.innerText = '上传完毕';
+      try { resolve(JSON.parse(xhr.responseText)); } catch(e) { resolve(xhr.responseText); }
+     } else {
+      if (progressEle) progressEle.innerText = '上传失败';
+      reject(new Error('HTTP ' + xhr.status));
+     }
+    }
+   };
+   if (xhr.upload) {
+    xhr.upload.onprogress = function(e) {
+     if (e.lengthComputable) {
+      var p = ((e.loaded / e.total) * 100).toFixed(2);
+      if (progressEle) progressEle.innerText = '上传中：' + p + '%';
+     }
+    };
+   }
+   xhr.onerror = function() {
+    if (progressEle) progressEle.innerText = '上传错误';
+    reject(new Error('Network error'));
+   };
+   xhr.send(fd);
+  });
+ };
+ UploadManager.prototype.addFiles = function(files) {
+  var self = this;
+  return new Promise(function(resolve) {
+   for (var i = 0; i < files.length; i++) {
+    self.queue.addTask(self.simulateUpload.bind(self), files[i].file, files[i].progressEle).then(function() {}).catch(function() {});
+   }
+   resolve();
+  });
+ };
+ UploadManager.prototype.setupEventListeners = function() {
+  var self = this;
+  this.queue.onProgress = function(p) {
+   var overview = document.getElementById('overview');
+   if (overview) overview.innerText = '进度: ' + p.completed + '/' + p.total + ' |运行中: ' + p.running + ' | 等待中: ' + p.queued;
+  };
+  this.queue.onComplete = function(s) {
+   if (self.onComplete) self.onComplete(s);
+  };
+  this.queue.onError = function(err, file) {
+   console.error('上传错误:', file && file.name, err);
+  };
+ };
+ UploadManager.prototype.clear = function() {
+  this.queue.clear();
+  var overview = document.getElementById('overview');
+  if (overview) overview.innerText = '';
+ };
+ // 刷新确认：上传完成后点击"确定"刷新当前页面
+ function confirmAndReload() {
+  try { document.querySelector('#uploadModal').classList.add('hidden'); } catch(e) {}
+  try { if (uploadManager && uploadManager.clear) uploadManager.clear(); } catch(e) {}
+  window.location.reload();
  }
 // ===== Upload UI logic (moved here so it's only present when uploads enabled) =====
-let files = [];
-const mainBody = document.querySelector('body');
-const uploadManager = new UploadManager();
+var files = [];
+var mainBody = document.querySelector('body');
+var uploadManager = new UploadManager();
 
-mainBody.addEventListener("dragover", e => e.preventDefault());
-mainBody.addEventListener("dragleave", e => e.preventDefault());
-mainBody.addEventListener("drop", dropHandle);
+mainBody.addEventListener('dragover', function(e) { e.preventDefault(); });
+mainBody.addEventListener('dragleave', function(e) { e.preventDefault(); });
+mainBody.addEventListener('drop', dropHandle);
 
-async function dropHandle(event) {
+function dropHandle(event) {
     event.preventDefault();
-    const promises = [];
-
-    for (const item of event.dataTransfer.items) {
-        const entry = item.webkitGetAsEntry();
-        promises.push(readFiles(entry));
+    if (!event.dataTransfer || !event.dataTransfer.items) return;
+    var items = event.dataTransfer.items;
+    var promises = [];
+    for (var i = 0; i < items.length; i++) {
+        var entry = items[i].webkitGetAsEntry && items[i].webkitGetAsEntry();
+        if (entry) promises.push(readFiles(entry));
     }
+    Promise.all(promises).then(function(resultFilesArrays) {
+        var flat = [];
+        for (var i = 0; i < resultFilesArrays.length; i++) {
+            flat = flat.concat(resultFilesArrays[i]);
+        }
+        files = flat.reverse();
 
-    const resultFilesArrays = await Promise.all(promises);
-    files = resultFilesArrays.flat().reverse();
+        var dataStr = '';
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+            dataStr += "<tr class='row-hover transition-colors'>" +
+                       "<td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>" + file.fullPath + "</td>" +
+                       "<td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>" + getFileSize(file.size) + "</td>" +
+                       "<td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>" + formatDate(file.lastModifiedDate) + "</td>" +
+                       "<td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>" +
+                       "</tr>";
+        }
 
-    let dataStr = files.map(file => `
-                             <tr class='row-hover transition-colors'>
-                             <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${file.fullPath}</td>
-                             <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${getFileSize(file.size)}</td>
-                             <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary'>${formatDate(file.lastModifiedDate)}</td>
-                             <td class='px-6 py-4 whitespace-nowrap text-sm text-secondary uploadStatus'>待上传</td>
-                             </tr>
-                             `).join('');
+        document.querySelector('#fileInfo').innerHTML = dataStr;
+        var overview = document.getElementById('overview');
+        overview.innerText = '文件总数：' + files.length;
 
-    document.querySelector("#fileInfo").innerHTML = dataStr;
-    const overview = document.getElementById('overview')
-    overview.innerText = `文件总数：${files.length}`
-
-    document.querySelector("#confirm").classList.add("hidden");
-    document.querySelector("#cancel").classList.remove("hidden");
-    document.querySelector("#uploader").classList.remove("hidden");
-    document.querySelector("#uploadModal").classList.remove("hidden");
+        document.querySelector('#confirm').classList.add('hidden');
+        document.querySelector('#cancel').classList.remove('hidden');
+        document.querySelector('#uploader').classList.remove('hidden');
+        document.querySelector('#uploadModal').classList.remove('hidden');
+    });
 }
 //读取文件/文件夹
-async function readFiles(item) {
+function readFiles(item) {
     if (item.isDirectory) {
         // 是一个文件夹
-        const directoryReader = item.createReader();
+        var directoryReader = item.createReader();
         // readEntries是一个异步方法
-        const entries = await new Promise((resolve, reject) => {
+        return new Promise(function(resolve, reject) {
             directoryReader.readEntries(resolve, reject);
+        }).then(function(entries) {
+            var promises = [];
+            for (var i = 0; i < entries.length; i++) {
+                promises.push(readFiles(entries[i]));
+            }
+            return Promise.all(promises).then(function(arrays) {
+                var result = [];
+                for (var i = 0; i < arrays.length; i++) {
+                    result = result.concat(arrays[i]);
+                }
+                return result;
+            });
         });
-
-        let files = [];
-        for (const entry of entries) {
-            const resultFiles = await readFiles(entry);
-            files = files.concat(resultFiles);
-        }
-        return files;
     } else {
         // 是一个文件
-        const file = await new Promise((resolve, reject) => {
+        return new Promise(function(resolve, reject) {
             item.file(resolve, reject);
+        }).then(function(file) {
+            file.fullPath = item.fullPath;
+            return [file];
         });
-        file.fullPath = item.fullPath;
-        return [file];
     }
 }
 
-async function sendFiles() {
+function sendFiles() {
     if (!files.length) return;
-    document.querySelector("#confirm").classList.add("hidden");
-    document.querySelector("#cancel").classList.remove("hidden");
-    document.querySelector("#uploader").classList.add("hidden");
-    const statusBoxs = Array.from(document.querySelectorAll(".uploadStatus"));
-    const fileItems = statusBoxs.map((e, i) => {
+    document.querySelector('#confirm').classList.add('hidden');
+    document.querySelector('#cancel').classList.remove('hidden');
+    document.querySelector('#uploader').classList.add('hidden');
+    var statusBoxs = Array.prototype.slice.call(document.querySelectorAll('.uploadStatus'));
+    var fileItems = statusBoxs.map(function(e, i) {
         return {
             file: files[i],
             progressEle: e,
         };
     });
 
-    await uploadManager.addFiles(fileItems);
-    uploadManager.queue.getStatus();
-    uploadManager.queue.startTask();
-    uploadManager.onComplete = (summary) => {
-        files = [];
-        document.querySelector("#confirm").classList.remove("hidden");
-        document.querySelector("#cancel").classList.add("hidden");
-        document.querySelector("#uploader").classList.add("hidden");
-    };
+    uploadManager.addFiles(fileItems).then(function() {
+        uploadManager.queue.getStatus();
+        uploadManager.queue.startTask();
+        uploadManager.onComplete = function(summary) {
+            files = [];
+            document.querySelector('#confirm').classList.remove('hidden');
+            document.querySelector('#cancel').classList.add('hidden');
+            document.querySelector('#uploader').classList.add('hidden');
+        };
+    });
 }
 
 function cancel() {
     files = [];
-    document.querySelector("#uploadModal").classList.add("hidden");
+    document.querySelector('#uploadModal').classList.add('hidden');
     uploadManager.clear();
 }
 
 function getFileSize(srcLength) {
-    let units = ["B", "KB", "MB", "GB"];
+    var units = ['B', 'KB', 'MB', 'GB'];
     var v = srcLength;
     var uIndex = 0;
     while (v > 1024 && uIndex < 3) {
         uIndex++;
         v /= 1024;
     }
-    return `${Math.round(v * 100) / 100} ${units[uIndex]}`;
+    return (Math.round(v * 100) / 100) + ' ' + units[uIndex];
 }
 
 function formatDate(v) {
     var dt = new Date();
     if (v instanceof Date) dt = v;
-    else if (v instanceof Number) {
+    else if (typeof v === 'number') {
         dt = new Date(v);
     }
-    let num_year = dt.getFullYear();
-    let num_month = dt.getMonth() + 1;
-    let num_date = dt.getDate();
-    let num_hour = dt.getHours();
-    let num_min = dt.getMinutes();
-    let num_sec = dt.getSeconds();
+    var num_year = dt.getFullYear();
+    var num_month = dt.getMonth() + 1;
+    var num_date = dt.getDate();
+    var num_hour = dt.getHours();
+    var num_min = dt.getMinutes();
+    var num_sec = dt.getSeconds();
 
-    return `${num_year}-${num_month < 10 ? "0" + num_month : num_month}-${num_date < 10 ? "0" + num_date : num_date
-        } ${num_hour < 10 ? "0" + num_hour : num_hour}:${num_min < 10 ? "0" + num_min : num_min
-        }:${num_sec < 10 ? "0" + num_sec : num_sec}`;
-
+    return num_year + '-' + (num_month < 10 ? '0' + num_month : num_month) + '-' + (num_date < 10 ? '0' + num_date : num_date) +
+        ' ' + (num_hour < 10 ? '0' + num_hour : num_hour) + ':' + (num_min < 10 ? '0' + num_min : num_min) +
+        ':' + (num_sec < 10 ? '0' + num_sec : num_sec);
 }
 </script>
