@@ -263,12 +263,21 @@ namespace HttpFileServer.Handlers
             var fileExist = false;
 
             // Guard against path traversal: ensure resolved path stays within SourceDir
-            var safeRoot = Path.GetFullPath(SourceDir);
-            var safePath = Path.GetFullPath(path);
+            string safeRoot, safePath;
+            try
+            {
+                safeRoot = Path.GetFullPath(SourceDir);
+                safePath = Path.GetFullPath(path);
+            }
+            catch (Exception)
+            {
+                // Invalid path characters or other path resolution errors
+                return new Tuple<string, Stream, bool>(contentType, null, false);
+            }
             if (!safePath.StartsWith(safeRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                 !safePath.Equals(safeRoot, StringComparison.OrdinalIgnoreCase))
             {
-                System.Diagnostics.Trace.TraceWarning($"Path traversal attempt blocked: '{path}' resolves outside SourceDir '{SourceDir}'");
+                System.Diagnostics.Trace.TraceWarning($"Path traversal attempt blocked: resolved path outside SourceDir");
                 return new Tuple<string, Stream, bool>(contentType, null, false);
             }
 
