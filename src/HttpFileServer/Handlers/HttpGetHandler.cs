@@ -269,7 +269,7 @@ namespace HttpFileServer.Handlers
                 {
                     await FileAccessHelper.AddAccessCount(path);
                     fileExist = true;
-                    stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+                    stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
                     contentType = "application/octet-stream";
                 }
                 else if (Directory.Exists(path))
@@ -489,6 +489,7 @@ namespace HttpFileServer.Handlers
                 response.StatusCode = (int)HttpStatusCode.NotFound;
                 return;
             }
+            response.AddHeader("Accept-Ranges", "bytes");
             response.ContentLength64 = stream.Length;
             try
             {
@@ -556,9 +557,11 @@ namespace HttpFileServer.Handlers
                 return;
             }
             response.AddHeader("Content-Range", $"bytes {range.Item1}-{range.Item2}/{stream.Length}");
+            response.AddHeader("Accept-Ranges", "bytes");
             var buff = new byte[81920];
             var rangeEnd = range.Item2 > range.Item1 ? range.Item2 : stream.Length - 1;
             var bytesNeeds = rangeEnd - range.Item1 + 1;
+            response.ContentLength64 = bytesNeeds;
             response.StatusCode = (int)HttpStatusCode.PartialContent;
             try
             {

@@ -26,7 +26,7 @@ namespace HttpFileServer.Services
 
         #region Properties
 
-        public static int LimitCount { get; set; } = 2;
+        public static int LimitCount { get; set; } = 32;
 
         #endregion Properties
 
