@@ -57,7 +57,8 @@ namespace HttpFileServer.Handlers
             var targetPath = Path.GetFullPath(Path.Combine(SourceDir, urlLocalPath.Replace('/', Path.DirectorySeparatorChar)));
             // 安全校验：目标路径必须在服务根目录内
             var fullSourceDir = Path.GetFullPath(SourceDir).TrimEnd(Path.DirectorySeparatorChar);
-            if (!targetPath.StartsWith(fullSourceDir + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            if (!targetPath.Equals(fullSourceDir, StringComparison.OrdinalIgnoreCase) &&
+                !targetPath.StartsWith(fullSourceDir + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             {
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 return;
