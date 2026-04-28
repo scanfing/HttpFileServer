@@ -92,9 +92,9 @@
     {{uploadSection}}
     <script>
         //主题初始化与切换
-        const root = document.documentElement;
-        const savedTheme = localStorage.getItem('webTheme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        var root = document.documentElement;
+        var savedTheme = localStorage.getItem('webTheme');
+        var prefersDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
         function applyTheme(mode) {
             root.setAttribute('data-theme', mode);
@@ -115,31 +115,53 @@
                 }
             } catch (e) { }
         }
-        applyTheme(savedTheme ? savedTheme : (prefersDark.matches ? 'dark' : 'light'));
-        prefersDark.addEventListener('change', e => {
-            if (!localStorage.getItem('webTheme')) applyTheme(e.matches ? 'dark' : 'light');
-        });
-        const themeToggle = document.getElementById('themeToggle');
-        const themeToggleHeader = document.getElementById('themeToggleHeader');
+        applyTheme(savedTheme ? savedTheme : (prefersDark && prefersDark.matches ? 'dark' : 'light'));
+        if (prefersDark) {
+            if (prefersDark.addEventListener) {
+                prefersDark.addEventListener('change', function(e) {
+                    if (!localStorage.getItem('webTheme')) applyTheme(e.matches ? 'dark' : 'light');
+                });
+            } else if (prefersDark.addListener) {
+                prefersDark.addListener(function(e) {
+                    if (!localStorage.getItem('webTheme')) applyTheme(e.matches ? 'dark' : 'light');
+                });
+            }
+        }
+        var themeToggle = document.getElementById('themeToggle');
+        var themeToggleHeader = document.getElementById('themeToggleHeader');
         // detect touch-capable devices and disable hover preview on those
-        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+        var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
         function handleThemeToggle() {
-            const cur = root.getAttribute('data-theme');
-            const next = cur === 'dark' ? 'light' : 'dark';
+            var cur = root.getAttribute('data-theme');
+            var next = cur === 'dark' ? 'light' : 'dark';
             applyTheme(next);
             localStorage.setItem('webTheme', next);
         }
         if (themeToggle) themeToggle.addEventListener('click', handleThemeToggle);
         if (themeToggleHeader) themeToggleHeader.addEventListener('click', handleThemeToggle);
 
+        // Polyfill for Element.closest (not available in IE)
+        if (typeof Element !== 'undefined' && !Element.prototype.closest) {
+            Element.prototype.closest = function(selector) {
+                var el = this;
+                while (el && el.nodeType === 1) {
+                    if (el.matches ? el.matches(selector) : (el.msMatchesSelector ? el.msMatchesSelector(selector) : false)) {
+                        return el;
+                    }
+                    el = el.parentNode;
+                }
+                return null;
+            };
+        }
+
         // ===== 原有脚本保持 =====
-        let previewFileNames = [];
-        let currentPreviewIndex = -1;
+        var previewFileNames = [];
+        var currentPreviewIndex = -1;
 
         // ================= 悬停预览逻辑 =================
-        let previewTimerId = null;
-        let lastHoverCoords = null;
-        const popover = document.getElementById('previewPopover');
+        var previewTimerId = null;
+        var lastHoverCoords = null;
+        var popover = document.getElementById('previewPopover');
 
         function startPreviewTimer(event, fileName, fileType) {
             if (isTouch) return; // disable hover preview on touch devices
@@ -147,7 +169,7 @@
             if (!fileName || /dir|folder|directory/i.test(fileType)) return;
             cancelPreviewTimer();
             lastHoverCoords = { x: event.pageX, y: event.pageY };
-            previewTimerId = setTimeout(() => {
+            previewTimerId = setTimeout(function() {
                 openPreviewOrShare(fileName, lastHoverCoords, true);
             }, 600);
             //600ms 后触发
@@ -157,7 +179,7 @@
             if (isTouch) return; // disable hover share popover on touch devices
             cancelPreviewTimer();
             lastHoverCoords = { x: event.pageX, y: event.pageY };
-            previewTimerId = setTimeout(() => {
+            previewTimerId = setTimeout(function() {
                 openPreviewOrShare(fileName, lastHoverCoords, true, 'share');
             }, 600);
             //600ms 后触发
@@ -177,12 +199,12 @@
 
         function positionPopover(coords) {
             if (!coords) return;
-            const offset = 14;
-            let left = coords.x + offset;
-            let top = coords.y + offset;
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            const rect = popover.getBoundingClientRect();
+            var offset = 14;
+            var left = coords.x + offset;
+            var top = coords.y + offset;
+            var vw = window.innerWidth;
+            var vh = window.innerHeight;
+            var rect = popover.getBoundingClientRect();
             if (left + rect.width > vw - 20) left = vw - rect.width - 20;
             if (top + rect.height > vh - 20) top = vh - rect.height - 20;
             popover.style.left = left + 'px';
@@ -190,64 +212,83 @@
         }
 
         function buildPreviewList() {
-            previewFileNames = Array.from(document.querySelectorAll('#tableBody button[data-filename]')).map(b => b.getAttribute('data-filename')).filter(n => !!n);
+            var btns = document.querySelectorAll('#tableBody button[data-filename]');
+            previewFileNames = [];
+            for (var i = 0; i < btns.length; i++) {
+                var name = btns[i].getAttribute('data-filename');
+                if (name) previewFileNames.push(name);
+            }
         }
 
         function updateNavButtons() {
-            const prev = document.getElementById('prevBtn');
-            const next = document.getElementById('nextBtn');
+            var prev = document.getElementById('prevBtn');
+            var next = document.getElementById('nextBtn');
             prev.disabled = currentPreviewIndex <= 0;
             next.disabled = currentPreviewIndex >= previewFileNames.length - 1;
         }
 
-        function openPreviewOrShare(fileName, coords = null, asPopover = false, type = 'preview') {
+        function openPreviewOrShare(fileName, coords, asPopover, type) {
+            if (coords === undefined) coords = null;
+            if (asPopover === undefined) asPopover = false;
+            if (type === undefined) type = 'preview';
             if (asPopover) {
                 popover.classList.remove('hidden');
                 positionPopover(coords);
             }
             if (type === 'preview') {
-                previewHandle(fileName, coords, asPopover)
-                document.querySelector("#shareText").classList.add("hidden");
-                document.querySelector("#prevBtn").classList.remove("hidden");
-                document.querySelector("#nextBtn").classList.remove("hidden");
+                previewHandle(fileName, coords, asPopover);
+                document.querySelector('#shareText').classList.add('hidden');
+                document.querySelector('#prevBtn').classList.remove('hidden');
+                document.querySelector('#nextBtn').classList.remove('hidden');
             } else {
-                shareHandle(fileName, coords, asPopover)
-                document.querySelector("#shareText").classList.remove("hidden");
-                document.querySelector("#prevBtn").classList.add("hidden");
-                document.querySelector("#nextBtn").classList.add("hidden");
+                shareHandle(fileName, coords, asPopover);
+                document.querySelector('#shareText').classList.remove('hidden');
+                document.querySelector('#prevBtn').classList.add('hidden');
+                document.querySelector('#nextBtn').classList.add('hidden');
             }
         }
 
+        var imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'];
+        var textExtensions = ['txt', 'md', 'html', 'js', 'css', 'json', 'log', 'xml', 'bat'];
+
+        function arrayIncludes(arr, val) {
+            return arr.indexOf(val) !== -1;
+        }
+
         function previewHandle(fileName, coords, asPopover) {
-            const fileExtension = fileName.split('.').pop().toLowerCase();
+            var fileExtension = fileName.split('.').pop().toLowerCase();
             if (asPopover) {
                 popover.innerHTML = '<div class="text-secondary text-[11px]">加载中...</div>';
-                if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'].includes(fileExtension)) {
-                    const img = new Image();
-                    img.onload = () => {
+                if (arrayIncludes(imageExtensions, fileExtension)) {
+                    var img = new Image();
+                    img.onload = function() {
                         popover.innerHTML = '';
                         popover.appendChild(img);
                         positionPopover(coords);
                     };
-                    img.onerror = () => {
+                    img.onerror = function() {
                         popover.innerHTML = '<div class="text-red-500">图片加载失败</div>';
                     };
-                    img.src = `./${fileName}`;
+                    img.src = './' + fileName;
                     img.style.maxWidth = '260px';
-                } else if (['txt', 'md', 'html', 'js', 'css', 'json', 'log', 'xml', 'bat'].includes(fileExtension)) {
-                    fetch(`./${fileName}`)
-                        .then(r => r.text())
-                        .then(text => {
-                            const pre = document.createElement('pre');
-                            if (text.length > 800) text = text.slice(0, 800) + '\n...';
-                            pre.textContent = text;
-                            popover.innerHTML = '';
-                            popover.appendChild(pre);
-                            positionPopover(coords);
-                        })
-                        .catch(() => {
-                            popover.innerHTML = '<div class="text-red-500">预览失败</div>';
-                        });
+                } else if (arrayIncludes(textExtensions, fileExtension)) {
+                    if (typeof fetch === 'function') {
+                        fetch('./' + fileName)
+                            .then(function(r) { return r.text(); })
+                            .then(function(text) {
+                                var pre = document.createElement('pre');
+                                if (text.length > 800) text = text.slice(0, 800) + '\n...';
+                                pre.textContent = text;
+                                popover.innerHTML = '';
+                                popover.appendChild(pre);
+                                positionPopover(coords);
+                            })
+                            .catch(function() {
+                                popover.innerHTML = '<div class="text-red-500">预览失败</div>';
+                            });
+                    } else {
+                        popover.innerHTML = '<div class="text-secondary">不支持预览</div>';
+                    }
                 } else {
                     popover.innerHTML = '<div class="text-secondary">不支持预览</div>';
                 }
@@ -256,39 +297,54 @@
             // ================= 原模态框逻辑（点击） =================
             buildPreviewList();
             currentPreviewIndex = previewFileNames.indexOf(fileName);
-            const modal = document.getElementById('previewModal');
-            const titleEl = document.getElementById('previewTitle');
-            const contentEl = document.getElementById('previewContent');
+            var modal = document.getElementById('previewModal');
+            var titleEl = document.getElementById('previewTitle');
+            var contentEl = document.getElementById('previewContent');
             titleEl.textContent = fileName;
             contentEl.innerHTML = '';
-            let el;
-            if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'].includes(fileExtension)) {
+            var el;
+            if (arrayIncludes(imageExtensions, fileExtension)) {
                 el = document.createElement('img');
-                el.src = `./${fileName}`;
-                el.classList.add('max-w-full', 'h-auto');
+                el.src = './' + fileName;
+                el.classList.add('max-w-full');
+                el.classList.add('h-auto');
                 contentEl.appendChild(el);
                 modal.classList.remove('hidden');
                 modal.style.display = 'flex';
-            } else if (['txt', 'md', 'html', 'js', 'css', 'json', 'log', 'xml', 'bat'].includes(fileExtension)) {
-                fetch(`./${fileName}`)
-                    .then(r => r.text())
-                    .then(text => {
-                        el = document.createElement('pre');
-                        el.textContent = text;
-                        el.classList.add('whitespace-pre-wrap', 'p-3', 'rounded', 'max-h-[60vh]', 'overflow-auto', 'text-xs');
-                        el.style.background = 'var(--panel-border)';
-                        contentEl.appendChild(el);
-                        modal.classList.remove('hidden');
-                        modal.style.display = 'flex';
-                    })
-                    .catch(() => {
-                        el = document.createElement('p');
-                        el.textContent = '预览失败。';
-                        el.classList.add('text-red-500');
-                        contentEl.appendChild(el);
-                        modal.classList.remove('hidden');
-                        modal.style.display = 'flex';
-                    });
+            } else if (arrayIncludes(textExtensions, fileExtension)) {
+                if (typeof fetch === 'function') {
+                    fetch('./' + fileName)
+                        .then(function(r) { return r.text(); })
+                        .then(function(text) {
+                            el = document.createElement('pre');
+                            el.textContent = text;
+                            el.classList.add('whitespace-pre-wrap');
+                            el.classList.add('p-3');
+                            el.classList.add('rounded');
+                            el.classList.add('max-h-[60vh]');
+                            el.classList.add('overflow-auto');
+                            el.classList.add('text-xs');
+                            el.style.background = 'var(--panel-border)';
+                            contentEl.appendChild(el);
+                            modal.classList.remove('hidden');
+                            modal.style.display = 'flex';
+                        })
+                        .catch(function() {
+                            el = document.createElement('p');
+                            el.textContent = '预览失败。';
+                            el.classList.add('text-red-500');
+                            contentEl.appendChild(el);
+                            modal.classList.remove('hidden');
+                            modal.style.display = 'flex';
+                        });
+                } else {
+                    el = document.createElement('p');
+                    el.textContent = '不支持预览此文件类型。';
+                    el.classList.add('text-secondary');
+                    contentEl.appendChild(el);
+                    modal.classList.remove('hidden');
+                    modal.style.display = 'flex';
+                }
             } else {
                 el = document.createElement('p');
                 el.textContent = '不支持预览此文件类型。';
@@ -301,7 +357,7 @@
         }
 
         function shareHandle(fileName, coords, asPopover) {
-            let shareUrl = location.href + fileName;
+            var shareUrl = location.href + fileName;
             try {
                 // prefer URL constructor to correctly resolve relative filenames and avoid double-encoding issues
                 shareUrl = new URL(fileName, location.href).href;
@@ -312,7 +368,7 @@
             if (asPopover) {
                 // render a small popover QR that doesn't affect layout
                 popover.innerHTML = '';
-                const popSize = Math.min(160, Math.floor(window.innerWidth * 0.35));
+                var popSize = Math.min(160, Math.floor(window.innerWidth * 0.35));
                 try {
                     new QRCode(popover, { text: shareUrl, width: popSize, height: popSize });
                 } catch (e) {
@@ -321,30 +377,31 @@
                 }
                 // 设置悬停提示为未转义的可读 URL（仅用于显示），但保持 QR 内容使用编码后的 shareUrl
                 try {
-                    let parsed = null;
-                    try { parsed = new URL(shareUrl, location.href); } catch (e) { parsed = null; }
-                    let display = shareUrl;
-                    if (parsed) {
+                    var parsedPopover = null;
+                    try { parsedPopover = new URL(shareUrl, location.href); } catch (e) { parsedPopover = null; }
+                    var displayPopover = shareUrl;
+                    if (parsedPopover) {
                         try {
-                            const decodedPath = decodeURIComponent(parsed.pathname);
-                            display = parsed.protocol + '//' + parsed.host + decodedPath + parsed.search + parsed.hash;
+                            var decodedPathPopover = decodeURIComponent(parsedPopover.pathname);
+                            displayPopover = parsedPopover.protocol + '//' + parsedPopover.host + decodedPathPopover + parsedPopover.search + parsedPopover.hash;
                         } catch (e) {
-                            try { display = parsed.protocol + '//' + parsed.host + decodeURI(parsed.pathname) + parsed.search + parsed.hash; } catch (e2) { display = parsed.href; }
+                            try { displayPopover = parsedPopover.protocol + '//' + parsedPopover.host + decodeURI(parsedPopover.pathname) + parsedPopover.search + parsedPopover.hash; } catch (e2) { displayPopover = parsedPopover.href; }
                         }
                     }
-                    popover.title = display;
-                    popover.setAttribute('aria-label', display);
+                    popover.title = displayPopover;
+                    popover.setAttribute('aria-label', displayPopover);
                 } catch (e) { /* ignore */ }
-                requestAnimationFrame(() => {
+                var raf = window.requestAnimationFrame || window.msRequestAnimationFrame || function(cb) { setTimeout(cb, 16); };
+                raf(function() {
                     positionPopover(coords);
-                })
-                return
+                });
+                return;
             }
 
-            const modal = document.getElementById('previewModal');
-            const titleEl = document.getElementById('previewTitle');
-            const contentEl = document.getElementById('previewContent');
-            const shareTextEl = document.getElementById('shareText');
+            var modal = document.getElementById('previewModal');
+            var titleEl = document.getElementById('previewTitle');
+            var contentEl = document.getElementById('previewContent');
+            var shareTextEl = document.getElementById('shareText');
             titleEl.textContent = fileName;
             contentEl.innerHTML = '';
             // 使用 innerHTML 以便不对分享链接进行转义，按照需要在服务器端保证内容安全
@@ -352,30 +409,30 @@
             // 避免使用 `innerHTML` 导致的 XSS 风险，同时保持可点击并显示原始明文。
             shareTextEl.innerHTML = '';
             try {
-                const link = document.createElement('a');
+                var link = document.createElement('a');
                 // 解析 URL 以便仅解码 pathname 部分（将 %20 转为空格），同时保持 href 使用编码形式
-                let parsed = null;
+                var parsedShare = null;
                 try {
-                    parsed = new URL(shareUrl, location.href);
+                    parsedShare = new URL(shareUrl, location.href);
                 } catch (e) {
-                    parsed = null;
+                    parsedShare = null;
                 }
-                if (parsed && (parsed.protocol === 'http:' || parsed.protocol === 'https:')) {
-                    link.href = parsed.href;
+                if (parsedShare && (parsedShare.protocol === 'http:' || parsedShare.protocol === 'https:')) {
+                    link.href = parsedShare.href;
                     link.target = '_blank';
                     link.rel = 'noopener noreferrer';
                     // 仅对 pathname 使用 decodeURIComponent，以显示可读的文件名/路径
-                    let decodedPath;
+                    var decodedPath;
                     try {
-                        decodedPath = decodeURIComponent(parsed.pathname);
+                        decodedPath = decodeURIComponent(parsedShare.pathname);
                     } catch (e) {
-                        try { decodedPath = decodeURI(parsed.pathname); } catch (e2) { decodedPath = parsed.pathname; }
+                        try { decodedPath = decodeURI(parsedShare.pathname); } catch (e2) { decodedPath = parsedShare.pathname; }
                     }
-                    const display = parsed.protocol + '//' + parsed.host + decodedPath + parsed.search + parsed.hash;
+                    var display = parsedShare.protocol + '//' + parsedShare.host + decodedPath + parsedShare.search + parsedShare.hash;
                     link.textContent = display;
                 } else {
                     // 非 HTTP(S) 或解析失败：安全回退，仅显示解码后的原始字符串（不可点击）
-                    let decoded;
+                    var decoded;
                     try { decoded = decodeURIComponent(shareUrl); } catch (e) { try { decoded = decodeURI(shareUrl); } catch (e2) { decoded = shareUrl; } }
                     link.textContent = decoded;
                     link.removeAttribute('href');
@@ -386,8 +443,8 @@
                 shareTextEl.textContent = shareUrl;
             }
             // render QR responsively so it fits on narrow screens
-            const maxModalWidth = Math.floor(window.innerWidth * 0.8);
-            const qrSize = Math.min(360, Math.max(120, maxModalWidth));
+            var maxModalWidth = Math.floor(window.innerWidth * 0.8);
+            var qrSize = Math.min(360, Math.max(120, maxModalWidth));
             try {
                 new QRCode(contentEl, { text: shareUrl, width: qrSize, height: qrSize });
             } catch (e) {
@@ -400,7 +457,7 @@
         }
 
         function shareFile(e) {
-            const fileName = e.currentTarget.getAttribute('data-filename');
+            var fileName = e.currentTarget.getAttribute('data-filename');
             // ensure any hover popover is cancelled/hidden before opening modal
             cancelPreviewTimer();
             hidePreviewPopover();
@@ -408,7 +465,7 @@
         }
 
         function previewFile(e) {
-            const fileName = e.currentTarget.getAttribute('data-filename');
+            var fileName = e.currentTarget.getAttribute('data-filename');
             // ensure any hover popover is cancelled/hidden before opening modal
             cancelPreviewTimer();
             hidePreviewPopover();
@@ -416,7 +473,7 @@
         }
 
         function closePreview() {
-            const modal = document.getElementById('previewModal');
+            var modal = document.getElementById('previewModal');
             modal.classList.add('hidden');
             modal.style.display = 'none';
             currentPreviewIndex = -1;
@@ -443,38 +500,40 @@
 
         // 键盘导航
         document.addEventListener('keydown', function (e) {
-            const visible = !document.getElementById('previewModal').classList.contains('hidden');
+            var visible = !document.getElementById('previewModal').classList.contains('hidden');
             if (!visible) return;
-            if (e.key === 'ArrowLeft') {
+            var key = e.key || '';
+            var keyCode = e.keyCode || e.which || 0;
+            if (key === 'ArrowLeft' || keyCode === 37) {
                 previewPrev();
-            } else if (e.key === 'ArrowRight') {
+            } else if (key === 'ArrowRight' || keyCode === 39) {
                 previewNext();
-            } else if (e.key === 'Escape') {
+            } else if (key === 'Escape' || keyCode === 27) {
                 closePreview();
             }
         });
 
         // 仅文件名链接悬停触发
-        const tableBody = document.getElementById('tableBody');
-        tableBody.addEventListener('mouseover', e => {
-            let link = e.target.closest('a[data-hover-preview]');
+        var tableBody = document.getElementById('tableBody');
+        tableBody.addEventListener('mouseover', function(e) {
+            var link = e.target.closest('a[data-hover-preview]');
             if (link) {
                 startPreviewTimer(e, link.getAttribute('data-filename'), link.getAttribute('data-filetype'));
-                return
+                return;
             }
             link = e.target.closest('button[data-hover-share]');
             if (link) {
                 startShareTimer(e, link.getAttribute('data-filename'));
             }
         });
-        tableBody.addEventListener('mouseout', e => {
-            const link = e.target.closest('a[data-hover-preview]') || e.target.closest('button[data-hover-share]');
+        tableBody.addEventListener('mouseout', function(e) {
+            var link = e.target.closest('a[data-hover-preview]') || e.target.closest('button[data-hover-share]');
             if (link) {
                 cancelPreviewTimer();
                 hidePreviewPopover();
             }
         });
-        tableBody.addEventListener('mousemove', e => {
+        tableBody.addEventListener('mousemove', function(e) {
             if (!popover.classList.contains('hidden')) {
                 lastHoverCoords = { x: e.pageX, y: e.pageY };
                 positionPopover(lastHoverCoords);
