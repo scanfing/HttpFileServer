@@ -262,6 +262,15 @@ namespace HttpFileServer.Handlers
             Stream stream = null;
             var fileExist = false;
 
+            // Guard against path traversal: ensure resolved path stays within SourceDir
+            var safeRoot = Path.GetFullPath(SourceDir);
+            var safePath = Path.GetFullPath(path);
+            if (!safePath.StartsWith(safeRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                !safePath.Equals(safeRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                return new Tuple<string, Stream, bool>(contentType, null, false);
+            }
+
             var data = _cacheSrv?.GetCache(path);
             if (data is null)
             {
