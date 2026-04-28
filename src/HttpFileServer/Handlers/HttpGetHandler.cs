@@ -268,31 +268,32 @@ namespace HttpFileServer.Handlers
             if (!safePath.StartsWith(safeRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                 !safePath.Equals(safeRoot, StringComparison.OrdinalIgnoreCase))
             {
+                System.Diagnostics.Trace.TraceWarning($"Path traversal attempt blocked: '{path}' resolves outside SourceDir '{SourceDir}'");
                 return new Tuple<string, Stream, bool>(contentType, null, false);
             }
 
             var data = _cacheSrv?.GetCache(path);
             if (data is null)
             {
-                if (File.Exists(path))
+                if (File.Exists(safePath))
                 {
-                    await FileAccessHelper.AddAccessCount(path);
+                    await FileAccessHelper.AddAccessCount(safePath);
                     fileExist = true;
-                    stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    stream = new FileStream(safePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                     contentType = "application/octet-stream";
                 }
-                else if (Directory.Exists(path))
+                else if (Directory.Exists(safePath))
                 {
-                    var location = Path.GetFileName(path);
+                    var location = Path.GetFileName(safePath);
                     var title = "HttpFileServer";
-                    if (path != SourceDir)
+                    if (safePath != SourceDir)
                     {
-                        location = Path.GetFileName(SourceDir) + "\\" + path.Replace(SourceDir, "").Trim('\\');
-                        title = Path.GetFileName(path.TrimEnd('\\')) + " -- HttpFileServer";
+                        location = Path.GetFileName(SourceDir) + "\\" + safePath.Replace(SourceDir, "").Trim('\\');
+                        title = Path.GetFileName(safePath.TrimEnd('\\')) + " -- HttpFileServer";
                     }
-                    var content = HtmlExtension.GenerateHtmlContentForDir(SourceDir, path, path != SourceDir, EnableUpload, location, title, _debugResourceDir);
+                    var content = HtmlExtension.GenerateHtmlContentForDir(SourceDir, safePath, safePath != SourceDir, EnableUpload, location, title, _debugResourceDir);
                     data = Encoding.UTF8.GetBytes(content);
-                    _cacheSrv?.SaveCache(path, data);
+                    _cacheSrv?.SaveCache(safePath, data);
                     stream = new MemoryStream(data);
                 }
             }
@@ -514,7 +515,7 @@ namespace HttpFileServer.Handlers
             {
                 if (tp.Item3)
                 {
-                    FileAccessHelper.SubAccessCount(path);
+                    FileAccessHelper.SubAccessCount(Path.GetFullPath(path));
                 }
                 stream.Close();
             }
@@ -598,7 +599,7 @@ namespace HttpFileServer.Handlers
             {
                 if (tp.Item3)
                 {
-                    FileAccessHelper.SubAccessCount(path);
+                    FileAccessHelper.SubAccessCount(Path.GetFullPath(path));
                 }
                 stream.Close();
             }
