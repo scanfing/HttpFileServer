@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using HttpFileServer.Web;
 using Newtonsoft.Json;
 
 namespace HttpFileServer.Handlers
@@ -40,18 +37,6 @@ namespace HttpFileServer.Handlers
                 return;
             }
 
-            if (request.ContentLength64 > int.MaxValue)
-            {
-                response.StatusCode = (int)HttpStatusCode.RequestEntityTooLarge;
-                return;
-            }
-
-            if (string.IsNullOrEmpty(request.ContentType) || !request.ContentType.StartsWith("multipart/form-data", StringComparison.OrdinalIgnoreCase))
-            {
-                response.StatusCode = (int)HttpStatusCode.UnsupportedMediaType;
-                return;
-            }
-
             // POST URL 即为目标文件路径（由前端将文件名拼接到请求路径中）
             var urlLocalPath = request.Url.LocalPath.TrimStart('/');
             var targetPath = Path.GetFullPath(Path.Combine(SourceDir, urlLocalPath.Replace('/', Path.DirectorySeparatorChar)));
@@ -73,44 +58,25 @@ namespace HttpFileServer.Handlers
             }
             var targetDir = Path.GetDirectoryName(targetPath);
             try { if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir); } catch { }
-            var results = new List<object>();
+
+            // 将请求体直接流式写入目标文件，无内存缓冲，支持任意大小文件
+            var dstFile = EnsureUniqueFile(targetPath);
+            long savedSize = 0;
             try
             {
-                var contents = await request.GetMultipartContent();
-                // 每次只处理请求中的第一个文件，目标路径已由 URL 指定
-                var fileContent = contents.FirstOrDefault(c => c.IsFile);
-                if (fileContent == null)
+                using (var fs = new FileStream(dstFile, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
                 {
-                    var errJson = JsonConvert.SerializeObject(new { ok = false, error = "No file found in request." });
-                    var errBuff = Encoding.UTF8.GetBytes(errJson);
-                    response.ContentType = "application/json"; response.ContentLength64 = errBuff.LongLength; await response.OutputStream.WriteAsync(errBuff, 0, errBuff.Length); response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return;
+                    await request.InputStream.CopyToAsync(fs);
+                    savedSize = fs.Length;
                 }
-                var postFile = fileContent.GetAsPostedFile();
-                if (postFile == null || string.IsNullOrWhiteSpace(postFile.FileName))
-                {
-                    var errJson = JsonConvert.SerializeObject(new { ok = false, error = "Invalid file in request." });
-                    var errBuff = Encoding.UTF8.GetBytes(errJson);
-                    response.ContentType = "application/json"; response.ContentLength64 = errBuff.LongLength; await response.OutputStream.WriteAsync(errBuff, 0, errBuff.Length); response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return;
-                }
-                var dstFile = EnsureUniqueFile(targetPath);
-                try
-                {
-                    postFile.SaveAs(dstFile);
-                    results.Add(new { name = targetFileName, size = postFile.ContentLength, saved = true, finalPath = dstFile.Replace(SourceDir, ""), contentType = postFile.ContentType });
-                }
-                catch (Exception ex)
-                {
-                    results.Add(new { name = targetFileName, size = postFile.ContentLength, saved = false, error = ex.Message });
-                }
-
-                var json = JsonConvert.SerializeObject(new { ok = true, files = results });
+                var json = JsonConvert.SerializeObject(new { ok = true, files = new[] { new { name = targetFileName, size = savedSize, saved = true, finalPath = dstFile.Replace(SourceDir, ""), contentType = request.ContentType } } });
                 var buff = Encoding.UTF8.GetBytes(json);
                 response.ContentType = "application/json"; response.ContentLength64 = buff.LongLength; await response.OutputStream.WriteAsync(buff, 0, buff.Length); response.StatusCode = (int)HttpStatusCode.OK;
             }
             catch (Exception ex)
             {
+                // 删除写了一半的文件，避免留下损坏的文件
+                try { if (File.Exists(dstFile)) File.Delete(dstFile); } catch { }
                 var json = JsonConvert.SerializeObject(new { ok = false, error = ex.Message }); var buff = Encoding.UTF8.GetBytes(json); response.ContentType = "application/json"; response.ContentLength64 = buff.LongLength; await response.OutputStream.WriteAsync(buff, 0, buff.Length); response.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
         }

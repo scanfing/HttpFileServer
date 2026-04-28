@@ -263,6 +263,7 @@ namespace HttpFileServer.Handlers
             var fileExist = false;
 
             // Guard against path traversal: ensure resolved path stays within SourceDir
+            // or within the debug resource directory when one is configured.
             string safeRoot, safePath;
             try
             {
@@ -274,8 +275,20 @@ namespace HttpFileServer.Handlers
                 // Invalid path characters or other path resolution errors
                 return new Tuple<string, Stream, bool>(contentType, null, false);
             }
-            if (!safePath.StartsWith(safeRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-                !safePath.Equals(safeRoot, StringComparison.OrdinalIgnoreCase))
+            var insideSourceDir = safePath.Equals(safeRoot, StringComparison.OrdinalIgnoreCase) ||
+                                  safePath.StartsWith(safeRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+            var insideDebugDir = false;
+            if (!insideSourceDir && !string.IsNullOrWhiteSpace(_debugResourceDir))
+            {
+                try
+                {
+                    var safeDebugRoot = Path.GetFullPath(_debugResourceDir).TrimEnd(Path.DirectorySeparatorChar);
+                    insideDebugDir = safePath.Equals(safeDebugRoot, StringComparison.OrdinalIgnoreCase) ||
+                                     safePath.StartsWith(safeDebugRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+                }
+                catch { }
+            }
+            if (!insideSourceDir && !insideDebugDir)
             {
                 System.Diagnostics.Trace.TraceWarning($"Path traversal attempt blocked: resolved path outside SourceDir");
                 return new Tuple<string, Stream, bool>(contentType, null, false);
