@@ -478,9 +478,11 @@ namespace HttpFileServer.Handlers
                     var files = Directory.GetFiles(path, "*", SearchOption.AllDirectories);
                     foreach (var file in files)
                     {
-                        var subFileName = file.Substring(path.Length).TrimStart('\\', '/');
+                        var subFileName = file.Substring(path.Length).TrimStart('\\', '/').Replace('\\', '/');
                         var entry = new ZipEntry(subFileName)
                         {
+                            // ZIP filenames need their own UTF-8 flag; HTTP encoding does not apply.
+                            IsUnicodeText = true,
                             DateTime = File.GetLastWriteTime(file)
                         };
                         zipStream.PutNextEntry(entry);
@@ -496,6 +498,7 @@ namespace HttpFileServer.Handlers
                     var relfilename = Path.GetFileName(path);
                     var entry = new ZipEntry(relfilename)
                     {
+                        IsUnicodeText = true,
                         DateTime = File.GetLastWriteTime(path)
                     };
                     zipStream.PutNextEntry(entry);
